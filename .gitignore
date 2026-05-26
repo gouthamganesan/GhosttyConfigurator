@@ -1,0 +1,61 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Xcode user-specific
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+*.moved-aside
+*.xcscmblueprint
+*.xccheckout
+
+# Xcode build artifacts
+build/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+# Package.resolved is intentionally NOT ignored — commit it for reproducible builds
+
+# Carthage / CocoaPods (not used, but defend in depth)
+Carthage/Build/
+Pods/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Credentials / signing — never commit
+*.p12
+*.cer
+*.mobileprovision
+*.pem
+*.p8
+ExportOptions.plist
+.env
+.env.local
+secrets/
+
+# Notarization staging
+build/export/
+build/*.zip
+build/*.dmg
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
