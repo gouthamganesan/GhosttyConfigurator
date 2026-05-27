@@ -69,7 +69,7 @@ These are non-negotiable budgets. CI fails the build if any are violated. Each r
 4. **No `DispatchQueue.main.async`.** Use `Task { @MainActor in ... }` or restructure to async.
 5. **No `Task.detached` unless you truly mean it.** Almost never needed in this app.
 
-### 2.2 The session-edit model (UX Principle 2)
+### 2.2 The auto-save model (UX Principle 2)
 
 ```swift
 @Observable
@@ -77,33 +77,64 @@ These are non-negotiable budgets. CI fails the build if any are violated. Each r
 final class ConfigStore {
     // MARK: - Stored properties
 
-    /// Last-read disk snapshot. Mutated only on load() / save().
-    private(set) var onDisk: Config
+    /// Single source of truth. Views read this; setters mutate this.
+    /// Persisted to disk via debounced background task on every mutation.
+    private(set) var effective: Config
 
-    /// In-session edits keyed by canonical Ghostty key path.
-    /// Cleared on saveAll() and discardAll().
-    private(set) var session: [ConfigKey: ConfigValue] = [:]
+    /// Ghostty's defaults, loaded once from schema introspection.
+    /// Used only for the modification dot and Reset to Default.
+    private(set) var defaults: Config
 
-    /// User-facing config: onDisk overlaid with session.
-    /// This is what every SwiftUI binding reads.
-    var effective: Config {
-        onDisk.applying(session)
-    }
-
-    /// True when there are unsaved changes (pending changes section).
-    var hasPendingChanges: Bool { !session.isEmpty }
+    /// Hash of the most recent successful disk write.
+    /// Used by the file watcher to ignore self-triggered FSEvents.
+    private var lastSavedHash: Int = 0
 
     let fileURL: URL
     private let io: ConfigFileIO
     private var watcherTask: Task<Void, Never>?
-    private var suppressNextReload = false
+    private var persistTask: Task<Void, Never>?  // debounced write
+    private let debounce: Duration = .milliseconds(600)
+    private(set) weak var undoManager: UndoManager?
 }
 ```
 
+**Setter shape — every mutation flows through this pattern:**
+
+```swift
+func setTheme(_ new: String) {
+    let old = effective.theme
+    guard old != new else { return }
+    undoManager?.registerUndo(withTarget: self) { $0.setTheme(old) }
+    undoManager?.setActionName("Change Theme")
+    effective.theme = new
+    schedulePersist()
+}
+
+private func schedulePersist() {
+    persistTask?.cancel()
+    persistTask = Task { [weak self] in
+        try? await Task.sleep(for: self?.debounce ?? .milliseconds(600))
+        guard !Task.isCancelled, let self else { return }
+        await self.persistNow()
+    }
+}
+
+private nonisolated func persistNow() async {
+    // serialize on actor ConfigFileIO; update lastSavedHash on success
+}
+```
+
+**Why this shape:**
+- **Single mutable property.** No `onDisk` vs `session` split. Views bind to `effective`; setters mutate `effective`. No overlay arithmetic, no computed merge, no diff bookkeeping.
+- **Debounced write.** `schedulePersist()` cancels any in-flight write and schedules a new one. Slider drags collapse to a single disk write per gesture. Discipline matters more than the saved ms.
+- **UndoManager is the surface for "review changes."** ⌘Z walks back one setter at a time; ⌘⇧Z redoes. No bespoke session UI required.
+- **`@Observable` tracks reads at the key-path level.** A view that reads `effective.cursorColor` won't invalidate when `effective.fontFamily` changes. *(Verify with `Self._printChanges()` during early dev.)*
+- **External-edit handling lives in the file watcher**, not the store: if FSEvents fires and `suppressNextReload` is false and the on-disk hash differs from `lastSavedHash`, re-read and replace `effective` (cancelling any in-flight `persistTask` first). One-second worst-case race window; invisible in practice.
+
 **Why this matters for performance:**
-- `effective` is computed, not stored. The apply is O(session.count), not O(188). For typical sessions (0-10 edits) it's free.
-- `@Observable` tracks reads at the key-path level — a view that reads `effective.cursorColor` won't invalidate when `effective.fontFamily` changes, even though both flow through the same computed property. *(Verify with `Self._printChanges()` during early dev.)*
-- If observation granularity turns out coarser than hoped on a computed property, fall back to per-key `@Observable` overlay: a dictionary of `@Observable` cell objects. Decision deferred until measurement says it matters.
+- No O(N) merge on every view body evaluation — `effective` is a stored property, observable reads are direct.
+- Debounce batches contiguous edits; round-trip parser cost (parse → patch → serialize, ~1–3ms per write) collapses 30× during a slider drag.
+- Memory cost is one `Config` value type plus one `defaults` snapshot. No session dictionary, no pending change list, no overlay tree.
 
 ### 2.3 Concurrency rules — discipline
 
@@ -383,6 +414,14 @@ One primary type per file. `// MARK: -` discipline inside types (see [research-s
 **Why:** macOS 14 already nudges Intel users out; new OSS tools shouldn't pay the universal-binary tax for an Intel long tail outside Apple's support runway. Halves binary size, simplifies build matrix.
 
 **Revisit when:** A vocal Intel user files an issue. Reply: build `-intel` artifact from CI as a separate download — don't bloat everyone's bundle.
+
+### 5.2.5 Auto-save, not session-buffered "Save All"
+
+**Decision:** Every control change updates `effective` immediately and triggers a 600ms-debounced disk write. No "Save All" button, no pending-changes UI, no `session` dictionary. `UndoManager` is the rollback surface.
+
+**Why:** The original plan called for session-buffered edits with explicit Save All (modeled on Xcode's source-control sidebar). That model breaks the behavioral squint test against System Settings — Apple's app is auto-save per toggle, and the configurator's central thesis is parity with that app. It also creates four secondary failure modes: live preview diverges from the real terminal, crashes lose unsaved edits, external file edits create conflict-resolution UI System Settings doesn't have, and the dot-color vocabulary (blue saved / yellow unsaved) is invented terminology no native Mac app uses.
+
+Auto-save eliminates all four. The cost is the "review before applying" mental model, which power users get for free by editing the text file directly anyway. See [03-ux-principles.md Principle 2](./03-ux-principles.md#principle-2-auto-save-with-debounce-and-undo) for the full mechanism.
 
 ### 5.3 `@Observable` everywhere, `ObservableObject` nowhere
 

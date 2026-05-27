@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Lint (macOS 14, Xcode pinned)
+    runs-on: macos-14
+    env:
+      XCODE_VERSION: "15.4"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s "/Applications/Xcode_${XCODE_VERSION}.app/Contents/Developer"
+
+      - name: Install XcodeGen + SwiftLint + SwiftFormat
+        run: |
+          brew install xcodegen swiftlint swiftformat
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: SwiftFormat lint
+        run: swiftformat --lint .
+
+      - name: SwiftLint strict
+        run: swiftlint --strict --reporter github-actions-logging
+
+      - name: Build (Debug)
+        run: |
+          xcodebuild \
+            -project GhosttyConfigurator.xcodeproj \
+            -scheme GhosttyConfigurator \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcbeautify --renderer github-actions
+
+      - name: Build (Release)
+        run: |
+          xcodebuild \
+            -project GhosttyConfigurator.xcodeproj \
+            -scheme GhosttyConfigurator \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcbeautify --renderer github-actions
+
+      - name: Bundle-size gate (Release < 8 MB)
+        run: |
+          APP=$(find ~/Library/Developer/Xcode/DerivedData -name 'GhosttyConfigurator.app' -path '*/Release/*' | head -1)
+          if [ -z "$APP" ]; then echo "No Release .app found"; exit 1; fi
+          SIZE_KB=$(du -k "$APP" | tail -1 | cut -f1)
+          echo "App bundle size: ${SIZE_KB} KB"
+          if [ "$SIZE_KB" -gt 8192 ]; then
+            echo "FAIL: app bundle ${SIZE_KB} KB exceeds 8 MB gate (see docs/04-technical-architecture.md §1)"
+            exit 1
+          fi

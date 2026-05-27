@@ -1,0 +1,11 @@
+# Quoted because of spaces (cosmetic — parser handles unquoted too).
+font-family = "JetBrains Mono"
+
+# Light:dark theme pair — comma-separated, quoted theme names.
+theme = light:"Flexoki Light",dark:"Flexoki Dark"
+
+# Quoted because leading ? would otherwise mean "optional include".
+config-file = "?literal"
+
+# Title can include any character — preserve verbatim.
+title = Build! (work)

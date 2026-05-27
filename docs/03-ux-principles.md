@@ -32,65 +32,85 @@ If a principle here conflicts with something in [00-PLAN.md](./00-PLAN.md), [01-
 
 ---
 
-## Principle 2: Pending-changes session model
+## Principle 2: Auto-save with debounce and undo
 
-**Rule.** Changes the user makes in the GUI are buffered in-memory, not written to disk on each toggle. A **"Pending Changes" section** appears at the **top of the sidebar** whenever there are unsaved changes, listing every pending edit. The user can review, discard individual changes, or save all.
+**Rule.** Every control change updates `effective` immediately, and a debounced background task flushes to disk ~600ms after the last edit. No Save button. No Pending Changes section. `⌘Z` / `⌘⇧Z` undo and redo individual changes through a real `UndoManager`.
 
-**Why.** Most configurator interactions involve tweaking 3–8 related settings in one session. Auto-saving on each change means: (a) every toggle triggers a config reload (jarring), (b) no atomic undo, (c) users can't preview a coherent set of changes before committing, (d) accidents are unrecoverable.
+**Why.** System Settings itself is auto-save per toggle — and the entire project is staked on being indistinguishable from System Settings, both visually *and behaviorally*. A session-buffered "Save All" model breaks the behavioral squint test the moment the user flips their first toggle and nothing happens. Beyond parity, auto-save eliminates four otherwise-real failure modes:
 
-The Xcode/VS Code source-control sidebar is the right mental model.
+1. **Live-preview lying to the real terminal.** With session buffering, the in-app preview shows the pending state while Ghostty still reads the saved file. Users see a theme change in the preview, ⌘-tab to Ghostty, theme is unchanged → "the app is broken." With auto-save, the file *is* the truth; preview and reality stay in lockstep.
+2. **Silent data loss on crash / ⌘Q.** Session state lives in RAM. Auto-save flushes to disk within ~600ms — there is no recovery problem because nothing is unsaved long enough to matter.
+3. **External-edit conflicts.** If the user edits `~/.config/ghostty/config` in vim while the GUI holds session edits, who wins on save? With auto-save, the window of contested state is sub-second; the file watcher merges trivially.
+4. **Inventing UI vocabulary System Settings doesn't have.** Pending Changes sidebar section, yellow-vs-blue dot semantics, ⌘S as the primary commit gesture — none of these exist in the app we're trying to look like. Auto-save deletes all of it.
 
 **How to apply.**
 
-- `ConfigStore` keeps two views:
-  - `onDisk` — last-read snapshot of the resolved config files
-  - `session` — overlay of in-session edits, keyed by `(key, optional list-index)`
-  - `effective` — computed: `onDisk` with `session` overrides applied; what the UI reads
-- Every row binds to `effective[key]`; setters write to `session`
-- Sidebar shows a conditional first section: **"Pending Changes (N)"**
-  - Each pending change = one row showing: friendly label (same label as in the source pane) + before → after value preview + which pane it lives in
-  - Tap row → navigate to that pane and scroll to the source row
-  - Trailing button on row: discard this change (revert to `onDisk`)
-  - Section footer: two buttons — `Save all` (primary, accent-color), `Discard all` (plain)
-- On `Save all`:
-  1. Validate session against schema; show errors inline if any
-  2. Write to disk via round-trip parser (preserves comments)
-  3. Trigger Ghostty reload (or restart prompt if any change requires it)
-  4. `session` clears; "Pending Changes" section disappears
-- On window close with unsaved changes: confirm dialog — "Save changes before closing?" / Save / Discard / Cancel
-- On Ghostty version change detected mid-session: warn user, offer to re-introspect schema; warn about stale `session` values
+- `ConfigStore` keeps a single source of truth:
+  - `effective` — the current config. Views read this; setters write this. There is no `onDisk` vs `session` split.
+  - `defaults` — Ghostty's default values (loaded once from schema introspection in Phase 2). Used only for the modification dot and "Reset to default."
+  - `lastSavedHash` — hash of the most recent successful disk write, used to detect external edits.
+- Every setter follows the same shape:
+  ```swift
+  func setTheme(_ new: String) {
+      let old = effective.theme
+      guard old != new else { return }
+      undoManager?.registerUndo(withTarget: self) { $0.setTheme(old) }
+      effective.theme = new
+      schedulePersist()
+  }
+  ```
+- `schedulePersist()` cancels any in-flight `Task` and starts a new one that sleeps ~600ms, then calls `ConfigFileIO.write(effective)`. The debounce window collapses bursts (slider drags, rapid toggles) into one disk write.
+- **External-edit handling.** `FileWatcher` fires when the file changes on disk:
+  - If `suppressNextReload == true` (we just wrote), consume the event and clear the flag.
+  - Else hash the on-disk file. If the hash matches `lastSavedHash`, ignore (no real change).
+  - Otherwise re-read and replace `effective` atomically. If the user is mid-edit (a debounced write is queued), let our write land first — never overwrite our pending values from a stale disk snapshot. This is a 1-second worst-case race; in practice it's invisible.
+- **Reset.** Right-click any row → "Reset to default" sets `effective[key] = defaults[key]` through the same setter path, so the change is auto-saved and undoable.
+- **No "Save all" anywhere.** ⌘S is unbound (or bound to "Reveal config in Finder" — TBD). The File menu has no Save item.
+- **Confirm on quit only if a flush is genuinely in flight** (rare; the 600ms debounce almost always completes before the user reaches ⌘Q). If it is, `await` the pending Task before terminating.
+
+**Why debounce instead of instant write?**
+
+Three reasons:
+1. Slider drags would otherwise produce ~60 writes/sec.
+2. Ghostty's `reload-config` IPC (or restart prompt) shouldn't fire on every keystroke in a multi-character text field.
+3. Round-trip parser cost is real (parse → patch → serialize), and batching contiguous edits cuts it 30× in the common case.
+
+600ms is the sweet spot — fast enough to feel "saved already" if the user immediately checks, slow enough to coalesce typing.
+
+**Keyboard:**
+- `⌘Z` / `⌘⇧Z` — undo / redo (registered with `UndoManager` per-control).
+- No `⌘S`. There is nothing to save.
+- `⌘.` — reset the focused row to default (deferred to Phase 6).
 
 **Edge cases:**
-- A change that reverts to `onDisk` value should remove itself from `session` (don't show "no-op" as pending)
-- Changes to list-typed keys (`keybind`, `font-family`) need a structural diff, not a string diff
-- "Save all" should still write even if the user has only one change — no special "single-edit" path
-
-**Keyboard:** `⌘S` = Save all. `⌘Z` / `⌘⇧Z` = undo/redo within the session.
+- Programmatic resets (e.g. "Reset section") batch undo via `undoManager.beginUndoGrouping()` / `endUndoGrouping()` so the user undoes them as one operation, not row by row.
+- A change that returns a value to its default still writes through the setter (which removes the modification dot), but is debounced like any other change.
+- If disk write fails (permissions, file gone), surface a non-modal banner in the toolbar area: "Couldn't save to config.ghostty — Retry / Reveal in Finder." Don't roll back `effective`; the user's intent is more authoritative than the filesystem error.
 
 ---
 
-## Principle 3: Modification-state indicators (dots)
+## Principle 3: Modification-state indicators (single dot)
 
-**Rule.** Every row carries a small colored dot after its label indicating modification state:
+**Rule.** Every row carries a small colored dot after its label when its value differs from Ghostty's default:
 
 - **No dot** — value equals Ghostty's default
-- **Blue dot** — value differs from default, persisted to disk
-- **Yellow dot** — value modified in current session, not yet saved
+- **Blue dot** — value differs from default
 
-**Why.** Users need at-a-glance signal for "what have I customized?" without diffing files. The session-vs-disk distinction makes pending changes visible at the row level, not just in the sidebar Pending Changes section.
+That's the whole semantic. No yellow/saved-vs-unsaved distinction — under [Principle 2](#principle-2-auto-save-with-debounce-and-undo), every edit is saved within ~600ms, so "unsaved" is not a state the user ever sees.
+
+**Why.** Users need at-a-glance signal for "what have I customized?" without diffing files. One dot, one meaning — matches the way macOS itself surfaces "modified from default" in System Settings (the small indicator next to changed keyboard shortcuts, custom display arrangements, etc.).
 
 **How to apply.**
 
-- Render dot as a 6pt circle to the right of the row label, with 6pt leading gap
-- Colors: blue = `Color.accentColor` (NOT hardcoded — adopts user's accent); yellow = `Color.yellow` (or a slightly more subdued `Color(red: 1, green: 0.78, blue: 0.2)` if `.yellow` looks too saturated)
-- Precedence: yellow > blue. A row that was already modified from default (blue) AND has a session edit shows yellow.
-- Sectional rollup: a section header (e.g. "Colors") gets a count badge "(3)" if any rows inside have non-default values, weighted by yellow if any are session-edits
-- Sidebar rollup: a sidebar section (e.g. "Appearance") gets a "(N modified)" subtitle when collapsed-state would warrant it; but in normal expanded state, just a small dot on the row matches the row-level pattern
-- Hover/tooltip on the dot reveals: "Modified from default (default: 13)" or "Unsaved change (was 13, now 16; default: 13)"
+- Render dot as a 6pt circle to the right of the row label, with 6pt leading gap.
+- Color: `Color.accentColor` (adopts the user's system accent — never hardcoded blue).
+- Sectional rollup: a section header (e.g. "Colors") gets a count badge "(3)" when any rows inside have non-default values.
+- Sidebar rollup: a sidebar item gets a single trailing dot when any row in that pane is modified from default. No count, no badge — just presence/absence.
+- Hover/tooltip on the dot reveals: `"Modified from default (default: <value>) — right-click to reset"`.
 
 **Resetting:**
-- Right-click on row → context menu: "Reset to default" (if blue or yellow), "Revert to saved" (if yellow only)
-- Section header right-click → "Reset all in this section"
+- Right-click on row → context menu: **"Reset to default"** (only enabled when modified). The reset goes through the same auto-save setter path, so it's undoable with ⌘Z.
+- Section header right-click → "Reset all in this section" — wrapped in an undo group so the user can undo the whole section reset with one ⌘Z.
 
 **Implementation note:** the default for each key comes from `ghostty +show-config --default --docs` (Phase 2 introspection). Cache it in the schema; refresh on Ghostty upgrade.
 
@@ -192,7 +212,7 @@ These extend [01-design-system.md](./01-design-system.md):
 ### `ModificationIndicator`
 
 ```swift
-enum ModState { case unchanged, modifiedSaved, modifiedSession }
+enum ModState { case unchanged, modified }
 
 struct ModificationIndicator: View {
     let state: ModState
@@ -200,18 +220,17 @@ struct ModificationIndicator: View {
     var body: some View {
         Group {
             switch state {
-            case .unchanged:        Color.clear
-            case .modifiedSaved:    Circle().fill(Color.accentColor)
-            case .modifiedSession:  Circle().fill(Color.yellow)
+            case .unchanged: Color.clear
+            case .modified:  Circle().fill(Color.accentColor)
             }
         }
         .frame(width: 6, height: 6)
-        .accessibilityLabel(state.accessibilityLabel)
+        .accessibilityLabel(state == .modified ? "Modified from default" : "")
     }
 }
 ```
 
-Used by every row component: place after the label text, with 6pt leading gap.
+Used by every row component: place after the label text, with 6pt leading gap. Two states only — auto-save (Principle 2) makes a third "unsaved" state meaningless.
 
 ### `DocTooltip`
 
@@ -270,52 +289,19 @@ LabeledContent {
 }
 ```
 
-### `PendingChangesSection`
+### ~~`PendingChangesSection`~~ — removed
 
-A new sidebar section that conditionally renders at the top:
+This component is **deleted** by [Principle 2](#principle-2-auto-save-with-debounce-and-undo). Under auto-save, there are no pending changes to display — every edit is on disk within ~600ms. The sidebar is just the three group sections:
 
-```swift
-struct PendingChangesSection: View {
-    @EnvironmentObject var store: ConfigStore
-
-    var body: some View {
-        if !store.session.isEmpty {
-            Section {
-                ForEach(store.session.entries) { change in
-                    PendingChangeRow(change: change)
-                }
-            } header: {
-                HStack {
-                    Text("Pending Changes")
-                    Spacer()
-                    Text("\(store.session.count)")
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
-            } footer: {
-                HStack {
-                    Button("Discard All") { store.discardSession() }
-                        .buttonStyle(.bordered)
-                    Spacer()
-                    Button("Save All") { store.saveSession() }
-                        .buttonStyle(.borderedProminent)
-                        .keyboardShortcut("s", modifiers: .command)
-                }
-            }
-        }
-    }
-}
-```
-
-The sidebar's main `List` becomes:
 ```swift
 List(selection: $selection) {
-    PendingChangesSection()
     Section { ForEach(SidebarSection.visualGroup) { row($0) } }
     Section { ForEach(SidebarSection.behaviorGroup) { row($0) } }
     Section { ForEach(SidebarSection.advancedGroup) { row($0) } }
 }
 ```
+
+This matches System Settings's sidebar shape exactly.
 
 ### `TerminalPreview`
 
@@ -354,7 +340,7 @@ Patch the following sections in other docs to align with these principles:
 ### Patch to `00-PLAN.md`
 
 - Add to **§6 Design principles** (insert as principle 7+): the five principles above as one-liners pointing to this doc
-- Add to **Phase 2** acceptance criteria: "ConfigStore implements the session-overlay model (Principle 2); writes flush only on Save"
+- Add to **Phase 2** acceptance criteria: "ConfigStore implements auto-save with debounce + UndoManager (Principle 2); every setter writes through `schedulePersist()` and registers undo"
 - Add to **Phase 3** per-pane checklist: "Every row has `RowAffix` showing modification state + doc tooltip"
 - Add to **Phase 4 (Theme Browser)** acceptance: "Uses `TerminalPreview` with terminal-style syntax highlighting (Principle 4)"
 

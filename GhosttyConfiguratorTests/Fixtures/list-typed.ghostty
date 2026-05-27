@@ -1,0 +1,13 @@
+# Multiple fonts for fallback order.
+font-family = JetBrains Mono
+font-family = Apple Color Emoji
+font-family = Symbols Nerd Font
+
+# Repeated keybinds.
+keybind = ctrl+z=close_surface
+keybind = ctrl+d=new_split:right
+keybind = ctrl+shift+d=new_split:down
+
+# Repeated env entries.
+env = EDITOR=nvim
+env = PAGER=less -R

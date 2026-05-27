@@ -1,0 +1,85 @@
+# XcodeGen project definition. Generate the .xcodeproj with:
+#   xcodegen generate
+# (or just run scripts/bootstrap.sh — it installs xcodegen if missing.)
+#
+# The .xcodeproj is git-ignored; project.yml is the source of truth.
+
+name: GhosttyConfigurator
+options:
+  bundleIdPrefix: com.gouthamj
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+  groupSortPosition: top
+  developmentLanguage: en
+  xcodeVersion: "15.4"
+
+configs:
+  Debug: debug
+  Release: release
+
+configFiles:
+  Debug: Configs/Debug.xcconfig
+  Release: Configs/Release.xcconfig
+
+settings:
+  base:
+    SWIFT_STRICT_CONCURRENCY: complete
+
+targets:
+  GhosttyConfigurator:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: GhosttyConfigurator
+        excludes:
+          - "**/*.md"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.gouthamj.ghostty-configurator
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright © 2026 Goutham Ganesan. MIT License."
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
+        INFOPLIST_KEY_NSMainStoryboardFile: ""
+        INFOPLIST_KEY_NSPrincipalClass: NSApplication
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_HARDENED_RUNTIME: YES
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
+        # Allow unsigned local builds without a dev cert.
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGNING_ALLOWED: YES
+    scheme:
+      testTargets:
+        - GhosttyConfiguratorTests
+      gatherCoverageData: false
+      commandLineArguments: {}
+      environmentVariables:
+        OS_ACTIVITY_MODE: disable
+
+  GhosttyConfiguratorTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: GhosttyConfiguratorTests
+        excludes:
+          - "**/*.md"
+    dependencies:
+      - target: GhosttyConfigurator
+    settings:
+      base:
+        PRODUCT_NAME: GhosttyConfiguratorTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.gouthamj.ghostty-configurator.tests
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/GhosttyConfigurator.app/Contents/MacOS/GhosttyConfigurator"
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_STRICT_CONCURRENCY: complete
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGNING_ALLOWED: YES
+        # Override the inherited APP icon/accent names so they don't bleed into the test bundle.
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: ""

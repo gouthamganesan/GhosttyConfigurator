@@ -1,0 +1,12 @@
+# Base config with two includes.
+theme = Tokyo Night
+
+# Required include — error if missing.
+config-file = themes/extra.ghostty
+
+# Optional include — silently skipped if missing.
+config-file = ?profiles/work.ghostty
+
+# Keys after the include directive are still processed before include resolution
+# at file-end, but the *include* overrides won't shadow this value.
+font-size = 14

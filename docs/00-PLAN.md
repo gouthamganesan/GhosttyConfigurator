@@ -181,8 +181,8 @@ This is its own design problem. Plan separately when you get here. Skeleton thou
 ### UX principles — non-negotiable (see [03-ux-principles.md](./03-ux-principles.md) for full detail)
 
 7. **Abstract config syntax from users.** Never expose raw flags or grammar (`-calt`, `search_selection`, `light:X,dark:Y`). Translate to friendly controls. Power users get the verbatim docs via a tooltip on every row.
-8. **Session-based pending changes.** Edits buffer in-memory; a "Pending Changes" section appears at the top of the sidebar; user reviews then Saves All. No auto-save per toggle. `⌘S` saves.
-9. **Modification-state dots.** Blue dot after a label = modified from default and saved. Yellow dot = unsaved session edit. No dot = at default.
+8. **Auto-save per control, with debounce and `UndoManager`.** Every control change updates `effective` immediately; a 600ms-debounced background task flushes to disk. `⌘Z` / `⌘⇧Z` undo/redo individual changes. No Save button, no pending-changes section — this matches System Settings's actual behavior and is what makes the *behavioral* squint test pass, not just the visual one. (See [03-ux-principles.md §Principle 2](./03-ux-principles.md#principle-2-auto-save-with-debounce-and-undo) for the full mechanism, including external-edit conflict handling.)
+9. **Single modification dot.** Blue dot after a label = modified from default. No dot = at default. No "saved vs unsaved" distinction — there is no such thing once auto-save is on. Hover reveals the default value and a "Reset to default" affordance.
 10. **Live previews are mandatory** for anything visually rendered (theme, font, cursor, opacity). Shared `TerminalPreview` component with terminal-style syntax highlighting (not IDE-style).
 11. **Help is one click away.** Every row that maps to a Ghostty key has an info button showing the verbatim docs entry. About pane links to all upstream Ghostty docs pages.
 

@@ -1,0 +1,8 @@
+# Set then clear.
+font-family = JetBrains Mono
+# This empty value resets font-family back to default.
+font-family =
+
+# Set list and then partially clear.
+keybind = ctrl+a=select_all
+keybind =

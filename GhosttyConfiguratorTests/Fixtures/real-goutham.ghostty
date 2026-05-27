@@ -1,0 +1,11 @@
+font-family = Geist Mono
+font-feature = -liga
+font-size = 14
+font-thicken = true
+theme = light:"Flexoki Light",dark:"Flexoki Dark"
+cursor-style = bar
+cursor-style-blink = true
+title = Build!
+window-title-font-family = Giest Mono
+window-height = 30
+window-width = 110

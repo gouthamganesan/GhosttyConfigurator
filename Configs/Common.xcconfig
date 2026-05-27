@@ -1,0 +1,31 @@
+// Common.xcconfig — settings shared by Debug and Release.
+// See docs/04-technical-architecture.md §3 for the rationale behind every line.
+
+PRODUCT_NAME = GhosttyConfigurator
+PRODUCT_BUNDLE_IDENTIFIER = com.gouthamj.ghostty-configurator
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1
+DEVELOPMENT_LANGUAGE = en
+
+MACOSX_DEPLOYMENT_TARGET = 14.0
+ARCHS = arm64
+EXCLUDED_ARCHS = x86_64
+VALID_ARCHS = arm64
+SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO
+
+SWIFT_VERSION = 5.9
+SWIFT_STRICT_CONCURRENCY = complete
+
+ENABLE_USER_SCRIPT_SANDBOXING = YES
+ENABLE_HARDENED_RUNTIME = YES
+CODE_SIGN_STYLE = Automatic
+CODE_SIGN_IDENTITY = Apple Development
+
+INFOPLIST_KEY_NSHumanReadableCopyright = Copyright © 2026 Goutham Ganesan. MIT License.
+INFOPLIST_KEY_LSApplicationCategoryType = public.app-category.developer-tools
+
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
+ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor
+
+GENERATE_INFOPLIST_FILE = YES
+DEVELOPMENT_TEAM = $(inherited)

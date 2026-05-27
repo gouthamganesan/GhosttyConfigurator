@@ -1,0 +1,9 @@
+# Whitespace edge cases.
+font-family=JetBrains Mono
+font-size  =   14
+   # comment indented (parser preserves the raw line as-is)
+background-opacity	=	0.95
+
+
+# Above were two blank lines.
+cursor-style = block

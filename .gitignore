@@ -4,6 +4,9 @@
 .LSOverride
 ._*
 
+# XcodeGen-generated project — regenerated from project.yml via scripts/bootstrap.sh
+GhosttyConfigurator.xcodeproj/
+
 # Xcode user-specific
 xcuserdata/
 *.xcuserstate
