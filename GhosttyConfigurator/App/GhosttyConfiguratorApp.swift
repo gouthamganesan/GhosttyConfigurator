@@ -5,6 +5,15 @@ struct GhosttyConfiguratorApp: App {
     @State private var store = ConfigStore()
     @State private var schemaStore = SchemaStore.shared
 
+    init() {
+        // Kick off schema introspection at app startup so DocTooltip is ready
+        // by the time the user clicks an info button. Detached so the App
+        // init can return immediately.
+        Task.detached(priority: .userInitiated) {
+            await SchemaStore.shared.loadIfNeeded()
+        }
+    }
+
     var body: some Scene {
         // Empty window title so each pane's hero card is the only identity in
         // the toolbar area. Window menu still shows "Ghostty Configurator"
