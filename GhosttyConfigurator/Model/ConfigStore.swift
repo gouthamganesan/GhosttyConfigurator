@@ -423,6 +423,66 @@ final class ConfigStore {
         set { setBool("macos-secure-input-indication", newValue, label: "Toggle Secure Input Indication") }
     }
 
+    // MARK: - Keybinds
+
+    /// All user-defined keybinds, parsed from `keybind = …` lines in the config.
+    /// Order matches their appearance in the file (later lines win when triggers collide).
+    var userKeybinds: [Keybind] {
+        file.listValues(for: "keybind").compactMap { KeybindParser.parse($0) }
+    }
+
+    func addKeybind(_ keybind: Keybind) {
+        let priorValues = file.listValues(for: "keybind")
+        var newValues = priorValues
+        newValues.append(KeybindParser.serialize(keybind))
+
+        undoManager?.registerUndo(withTarget: self) { store in
+            store.replaceKeybindList(priorValues, label: "Add Shortcut")
+        }
+        undoManager?.setActionName("Add Shortcut")
+        file.setList("keybind", values: newValues)
+        schedulePersist()
+    }
+
+    func removeKeybind(_ keybind: Keybind) {
+        let priorValues = file.listValues(for: "keybind")
+        let target = KeybindParser.serialize(keybind)
+        let newValues = priorValues.filter { $0 != target }
+        guard newValues.count != priorValues.count else { return }
+
+        undoManager?.registerUndo(withTarget: self) { store in
+            store.replaceKeybindList(priorValues, label: "Delete Shortcut")
+        }
+        undoManager?.setActionName("Delete Shortcut")
+        file.setList("keybind", values: newValues)
+        schedulePersist()
+    }
+
+    func replaceKeybind(_ old: Keybind, with new: Keybind) {
+        let priorValues = file.listValues(for: "keybind")
+        let oldSerialized = KeybindParser.serialize(old)
+        let newSerialized = KeybindParser.serialize(new)
+        var newValues = priorValues
+        if let idx = newValues.firstIndex(of: oldSerialized) {
+            newValues[idx] = newSerialized
+        } else {
+            newValues.append(newSerialized)
+        }
+
+        undoManager?.registerUndo(withTarget: self) { store in
+            store.replaceKeybindList(priorValues, label: "Edit Shortcut")
+        }
+        undoManager?.setActionName("Edit Shortcut")
+        file.setList("keybind", values: newValues)
+        schedulePersist()
+    }
+
+    private func replaceKeybindList(_ values: [String], label: String) {
+        undoManager?.setActionName(label)
+        file.setList("keybind", values: values)
+        schedulePersist()
+    }
+
     // MARK: - Modification dot
 
     /// True when the typed value differs from the default. Reads off the

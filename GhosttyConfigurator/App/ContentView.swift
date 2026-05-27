@@ -72,7 +72,7 @@ struct ContentView: View {
         case .window:           WindowPane()
         case .font:             FontPane()
         case .cursor:           CursorPane()
-        case .keyboard:         PlaceholderPane(section: section)
+        case .keyboard:         KeyboardPane()
         case .shell:            ShellPane()
         case .clipboardMouse:   ClipboardAndMousePane()
         case .general:          GeneralPane()
