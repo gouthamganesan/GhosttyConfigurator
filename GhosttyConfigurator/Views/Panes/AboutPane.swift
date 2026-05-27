@@ -1,6 +1,13 @@
 import SwiftUI
 
 struct AboutPane: View {
+    private var appVersion: String {
+        let dict = Bundle.main.infoDictionary
+        let marketing = dict?["CFBundleShortVersionString"] as? String ?? "0.0.0"
+        let build = dict?["CFBundleVersion"] as? String ?? "1"
+        return "\(marketing) (\(build))"
+    }
+
     private let docsLinks: [(String, String)] = [
         ("Ghostty website",               "https://ghostty.org"),
         ("Configuration docs",            "https://ghostty.org/docs/config"),
@@ -24,9 +31,10 @@ struct AboutPane: View {
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Ghostty Configurator").font(.title2).bold()
-                        Text("Version 0.1.0 — Phase 1 preview")
+                        Text("Version \(appVersion)")
                             .font(.callout)
                             .foregroundStyle(.secondary)
+                            .monospacedDigit()
                         Text("A native macOS companion to the Ghostty terminal.")
                             .font(.callout)
                             .foregroundStyle(.secondary)
@@ -56,7 +64,6 @@ struct AboutPane: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("About")
     }
 }
 

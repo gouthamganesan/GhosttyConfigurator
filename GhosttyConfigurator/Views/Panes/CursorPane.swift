@@ -70,6 +70,5 @@ struct CursorPane: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Cursor")
     }
 }

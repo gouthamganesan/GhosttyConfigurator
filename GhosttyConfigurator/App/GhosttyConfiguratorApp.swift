@@ -6,7 +6,11 @@ struct GhosttyConfiguratorApp: App {
     @State private var schemaStore = SchemaStore.shared
 
     var body: some Scene {
-        let scene = Window("Ghostty Configurator", id: "main") {
+        // Empty window title so each pane's hero card is the only identity in
+        // the toolbar area. Window menu still shows "Ghostty Configurator"
+        // (via INFOPLIST CFBundleName) so window-switching/Dock labels stay
+        // correct.
+        let scene = Window("", id: "main") {
             ContentView()
                 .environment(store)
                 .environment(schemaStore)

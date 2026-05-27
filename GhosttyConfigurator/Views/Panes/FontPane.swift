@@ -88,7 +88,6 @@ struct FontPane: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Font")
     }
 
     private var formattedFontSize: String {

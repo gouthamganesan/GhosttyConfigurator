@@ -99,7 +99,6 @@ struct AppearancePane: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Appearance")
         .navigationDestination(for: ThemeBrowserMode.self) { mode in
             ThemeBrowserView(mode: mode)
         }

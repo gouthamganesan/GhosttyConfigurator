@@ -94,6 +94,5 @@ struct ShellPane: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Shell")
     }
 }

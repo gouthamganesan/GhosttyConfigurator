@@ -121,6 +121,5 @@ struct WindowPane: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Window")
     }
 }

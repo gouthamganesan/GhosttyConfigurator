@@ -104,6 +104,5 @@ struct GeneralPane: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("General")
     }
 }

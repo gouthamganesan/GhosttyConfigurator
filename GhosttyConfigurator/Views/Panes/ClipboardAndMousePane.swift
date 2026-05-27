@@ -123,6 +123,5 @@ struct ClipboardAndMousePane: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Clipboard & Mouse")
     }
 }

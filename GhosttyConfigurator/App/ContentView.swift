@@ -36,7 +36,8 @@ struct ContentView: View {
             window.collectionBehavior.insert(.fullScreenNone)
             window.collectionBehavior.remove(.fullScreenPrimary)
             window.standardWindowButton(.zoomButton)?.isEnabled = false
-            window.title = "Ghostty Configurator"
+            window.title = ""
+            window.titleVisibility = .hidden
         })
         .task {
             store.undoManager = undoManager

@@ -22,7 +22,6 @@ struct PlaceholderPane: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle(section.title)
     }
 
     private var gradient: [Color] {
