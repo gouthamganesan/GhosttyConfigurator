@@ -8,15 +8,6 @@ struct WindowPane: View {
 
         Form {
             Section {
-                HeroCard(
-                    symbol: "macwindow",
-                    title: "Window",
-                    description: "Title-bar style, padding, and window-level behavior.",
-                    iconGradient: [.blue, .cyan]
-                )
-            }
-
-            Section {
                 LabeledContent {
                     Picker("", selection: $store.titlebarStyle) {
                         ForEach(TitlebarStyle.allCases) { Text($0.label).tag($0) }
@@ -121,5 +112,9 @@ struct WindowPane: View {
             }
         }
         .formStyle(.grouped)
+        .paneToolbar(symbol: "macwindow",
+                     title: "Window",
+                     subtitle: "Title bar, padding, window behavior.",
+                     tint: .blue)
     }
 }

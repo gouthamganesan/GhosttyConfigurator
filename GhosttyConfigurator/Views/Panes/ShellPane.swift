@@ -8,15 +8,6 @@ struct ShellPane: View {
 
         Form {
             Section {
-                HeroCard(
-                    symbol: "terminal.fill",
-                    title: "Shell",
-                    description: "Shell integration features, startup command, and TERM identity.",
-                    iconGradient: [.gray, Color(NSColor.systemGray)]
-                )
-            }
-
-            Section {
                 LabeledContent {
                     Picker("", selection: $store.shellIntegration) {
                         ForEach(ShellIntegration.allCases) { Text($0.label).tag($0) }
@@ -94,5 +85,9 @@ struct ShellPane: View {
             }
         }
         .formStyle(.grouped)
+        .paneToolbar(symbol: "terminal.fill",
+                     title: "Shell",
+                     subtitle: "Integration, startup, TERM.",
+                     tint: Color(NSColor.systemGray))
     }
 }

@@ -8,15 +8,6 @@ struct AppearancePane: View {
 
         Form {
             Section {
-                HeroCard(
-                    symbol: "paintpalette.fill",
-                    title: "Appearance",
-                    description: "Customize colors, themes, and the visual feel of your terminal.",
-                    iconGradient: [.pink, .purple]
-                )
-            }
-
-            Section {
                 if store.themePair.isPair {
                     matchAppearanceToggle(isOn: true)
                     NavigationLink(value: ThemeBrowserMode.lightPair) {
@@ -99,6 +90,10 @@ struct AppearancePane: View {
             }
         }
         .formStyle(.grouped)
+        .paneToolbar(symbol: "paintpalette.fill",
+                     title: "Appearance",
+                     subtitle: "Colors, themes, and visual feel.",
+                     tint: .pink)
         .navigationDestination(for: ThemeBrowserMode.self) { mode in
             ThemeBrowserView(mode: mode)
         }

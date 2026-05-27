@@ -8,15 +8,6 @@ struct CursorPane: View {
 
         Form {
             Section {
-                HeroCard(
-                    symbol: "cursorarrow.rays",
-                    title: "Cursor",
-                    description: "Shape, blink, and click behavior for the terminal cursor.",
-                    iconGradient: [.teal, .cyan]
-                )
-            }
-
-            Section {
                 LabeledContent {
                     Picker("", selection: $store.cursorStyle) {
                         ForEach(CursorStyle.allCases) { Text($0.label).tag($0) }
@@ -70,5 +61,9 @@ struct CursorPane: View {
             }
         }
         .formStyle(.grouped)
+        .paneToolbar(symbol: "cursorarrow.rays",
+                     title: "Cursor",
+                     subtitle: "Shape, blink, click behavior.",
+                     tint: .teal)
     }
 }

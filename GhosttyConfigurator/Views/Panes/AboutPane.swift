@@ -23,28 +23,6 @@ struct AboutPane: View {
     var body: some View {
         Form {
             Section {
-                HStack(spacing: 16) {
-                    Image("Logo")
-                        .resizable()
-                        .interpolation(.high)
-                        .frame(width: 96, height: 96)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Ghostty Configurator").font(.title2).bold()
-                        Text("Version \(appVersion)")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                        Text("A native macOS companion to the Ghostty terminal.")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer(minLength: 0)
-                }
-                .padding(.vertical, 6)
-            }
-
-            Section {
                 ForEach(docsLinks, id: \.0) { label, urlString in
                     if let url = URL(string: urlString) {
                         Link(label, destination: url)
@@ -64,6 +42,10 @@ struct AboutPane: View {
             }
         }
         .formStyle(.grouped)
+        .paneToolbar(symbol: "info.circle.fill",
+                     title: "About",
+                     subtitle: "Version \(appVersion)",
+                     tint: .blue)
     }
 }
 

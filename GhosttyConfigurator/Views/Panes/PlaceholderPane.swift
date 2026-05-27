@@ -8,24 +8,17 @@ struct PlaceholderPane: View {
     var body: some View {
         Form {
             Section {
-                HeroCard(
-                    symbol: section.symbol,
-                    title: section.title,
-                    description: "This pane is on the roadmap. The visual skeleton is in place; controls land in later phases."
-                    , iconGradient: gradient
-                )
-            }
-            Section {
                 LabeledContent("Status") {
                     Text("Coming soon").foregroundStyle(.secondary)
                 }
+            } footer: {
+                Text("This pane is on the roadmap. The visual skeleton is in place; controls land in later phases.")
             }
         }
         .formStyle(.grouped)
-    }
-
-    private var gradient: [Color] {
-        // Pull two adjacent shades from the section tint for the hero icon.
-        [section.tint, section.tint.opacity(0.75)]
+        .paneToolbar(symbol: section.symbol,
+                     title: section.title,
+                     subtitle: "Coming soon.",
+                     tint: section.tint)
     }
 }

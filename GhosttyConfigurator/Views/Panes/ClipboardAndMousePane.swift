@@ -8,15 +8,6 @@ struct ClipboardAndMousePane: View {
 
         Form {
             Section {
-                HeroCard(
-                    symbol: "doc.on.clipboard.fill",
-                    title: "Clipboard & Mouse",
-                    description: "Pasting permissions, selection behavior, and mouse capture rules.",
-                    iconGradient: [.green, .mint]
-                )
-            }
-
-            Section {
                 LabeledContent {
                     Picker("", selection: $store.clipboardRead) {
                         ForEach(ClipboardPermission.allCases) { Text($0.label).tag($0) }
@@ -123,5 +114,9 @@ struct ClipboardAndMousePane: View {
             }
         }
         .formStyle(.grouped)
+        .paneToolbar(symbol: "doc.on.clipboard.fill",
+                     title: "Clipboard & Mouse",
+                     subtitle: "Permissions, paste, selection.",
+                     tint: .green)
     }
 }

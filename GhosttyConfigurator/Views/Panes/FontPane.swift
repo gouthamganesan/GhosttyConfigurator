@@ -8,15 +8,6 @@ struct FontPane: View {
 
         Form {
             Section {
-                HeroCard(
-                    symbol: "textformat",
-                    title: "Font",
-                    description: "Choose your terminal font, size, and OpenType features.",
-                    iconGradient: [.indigo, .purple]
-                )
-            }
-
-            Section {
                 LabeledContent {
                     HStack(spacing: 6) {
                         Text(store.fontFamily)
@@ -88,6 +79,10 @@ struct FontPane: View {
             }
         }
         .formStyle(.grouped)
+        .paneToolbar(symbol: "textformat",
+                     title: "Font",
+                     subtitle: "Family, size, OpenType features.",
+                     tint: .indigo)
     }
 
     private var formattedFontSize: String {

@@ -8,15 +8,6 @@ struct GeneralPane: View {
 
         Form {
             Section {
-                HeroCard(
-                    symbol: "gearshape.fill",
-                    title: "General",
-                    description: "Updates, lifecycle, notifications, and secure input.",
-                    iconGradient: [Color(NSColor.systemGray), Color(NSColor.systemGray).opacity(0.7)]
-                )
-            }
-
-            Section {
                 LabeledContent {
                     Picker("", selection: $store.autoUpdate) {
                         ForEach(AutoUpdateMode.allCases) { Text($0.label).tag($0) }
@@ -104,5 +95,9 @@ struct GeneralPane: View {
             }
         }
         .formStyle(.grouped)
+        .paneToolbar(symbol: "gearshape.fill",
+                     title: "General",
+                     subtitle: "Updates, lifecycle, notifications.",
+                     tint: Color(NSColor.systemGray))
     }
 }
