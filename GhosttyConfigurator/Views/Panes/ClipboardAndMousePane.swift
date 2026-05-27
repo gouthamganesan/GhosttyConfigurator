@@ -114,9 +114,7 @@ struct ClipboardAndMousePane: View {
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(symbol: "doc.on.clipboard.fill",
-                     title: "Clipboard & Mouse",
-                     subtitle: "Permissions, paste, selection.",
-                     tint: .green)
+        .paneToolbar(title: "Clipboard & Mouse",
+                     subtitle: "Permissions, paste, selection.")
     }
 }

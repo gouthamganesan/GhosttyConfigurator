@@ -112,9 +112,7 @@ struct WindowPane: View {
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(symbol: "macwindow",
-                     title: "Window",
-                     subtitle: "Title bar, padding, window behavior.",
-                     tint: .blue)
+        .paneToolbar(title: "Window",
+                     subtitle: "Title bar, padding, window behavior.")
     }
 }

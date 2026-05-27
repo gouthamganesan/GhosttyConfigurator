@@ -90,10 +90,8 @@ struct AppearancePane: View {
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(symbol: "paintpalette.fill",
-                     title: "Appearance",
-                     subtitle: "Colors, themes, and visual feel.",
-                     tint: .pink)
+        .paneToolbar(title: "Appearance",
+                     subtitle: "Colors, themes, and visual feel.")
         .navigationDestination(for: ThemeBrowserMode.self) { mode in
             ThemeBrowserView(mode: mode)
         }

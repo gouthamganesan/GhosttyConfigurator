@@ -42,10 +42,8 @@ struct AboutPane: View {
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(symbol: "info.circle.fill",
-                     title: "About",
-                     subtitle: "Version \(appVersion)",
-                     tint: .blue)
+        .paneToolbar(title: "About",
+                     subtitle: "Version \(appVersion)")
     }
 }
 

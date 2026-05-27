@@ -53,8 +53,11 @@ struct ContentView: View {
 
     @ViewBuilder
     private func pane(for section: SidebarSection) -> some View {
-        let body = paneBody(for: section)
-        body
+        // Reload button lives in the toolbar's trailing slot for every pane.
+        // The pane header (icon + title + subtitle) is rendered by each pane's
+        // .paneToolbar(...) modifier as a content row, not a toolbar item, so
+        // it can match the page padding and have no frosted background.
+        paneBody(for: section)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     ReloadToolbarButton()

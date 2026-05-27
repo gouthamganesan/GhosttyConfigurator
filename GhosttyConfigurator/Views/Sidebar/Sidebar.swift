@@ -11,6 +11,7 @@ struct Sidebar: View {
         }
         .listStyle(.sidebar)
         .navigationSplitViewColumnWidth(min: 200, ideal: 215, max: 260)
+        .toolbar(removing: .sidebarToggle)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             SidebarFooter()
         }

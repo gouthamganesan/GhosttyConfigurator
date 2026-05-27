@@ -85,9 +85,7 @@ struct ShellPane: View {
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(symbol: "terminal.fill",
-                     title: "Shell",
-                     subtitle: "Integration, startup, TERM.",
-                     tint: Color(NSColor.systemGray))
+        .paneToolbar(title: "Shell",
+                     subtitle: "Integration, startup, TERM.")
     }
 }

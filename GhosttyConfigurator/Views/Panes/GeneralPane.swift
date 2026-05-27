@@ -95,9 +95,7 @@ struct GeneralPane: View {
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(symbol: "gearshape.fill",
-                     title: "General",
-                     subtitle: "Updates, lifecycle, notifications.",
-                     tint: Color(NSColor.systemGray))
+        .paneToolbar(title: "General",
+                     subtitle: "Updates, lifecycle, notifications.")
     }
 }

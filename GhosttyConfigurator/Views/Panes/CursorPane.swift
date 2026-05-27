@@ -61,9 +61,7 @@ struct CursorPane: View {
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(symbol: "cursorarrow.rays",
-                     title: "Cursor",
-                     subtitle: "Shape, blink, click behavior.",
-                     tint: .teal)
+        .paneToolbar(title: "Cursor",
+                     subtitle: "Shape, blink, click behavior.")
     }
 }

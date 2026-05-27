@@ -16,9 +16,7 @@ struct PlaceholderPane: View {
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(symbol: section.symbol,
-                     title: section.title,
-                     subtitle: "Coming soon.",
-                     tint: section.tint)
+        .paneToolbar(title: section.title,
+                     subtitle: "Coming soon.")
     }
 }

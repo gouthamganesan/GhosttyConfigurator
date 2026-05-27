@@ -79,10 +79,8 @@ struct FontPane: View {
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(symbol: "textformat",
-                     title: "Font",
-                     subtitle: "Family, size, OpenType features.",
-                     tint: .indigo)
+        .paneToolbar(title: "Font",
+                     subtitle: "Family, size, OpenType features.")
     }
 
     private var formattedFontSize: String {
