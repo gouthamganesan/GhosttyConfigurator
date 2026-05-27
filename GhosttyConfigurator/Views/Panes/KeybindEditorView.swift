@@ -38,8 +38,7 @@ struct KeybindEditorView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
+        Form {
                 Section {
                     LabeledContent {
                         KeybindTriggerField(modifiers: $modifiers, key: $key)
@@ -114,8 +113,6 @@ struct KeybindEditorView: View {
                     if !entry.needsParameter { actionParam = "" }
                 }
             }
-        }
-        .frame(minWidth: 500, minHeight: 420)
     }
 
     private func save() {

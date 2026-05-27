@@ -2,9 +2,6 @@ import SwiftUI
 
 struct KeyboardPane: View {
     @Environment(ConfigStore.self) private var store
-    @State private var editing: Keybind?
-    @State private var showEditor: Bool = false
-    @State private var addingNew: Bool = false
 
     var body: some View {
         Form {
@@ -20,11 +17,15 @@ struct KeyboardPane: View {
                             .font(.callout)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
-                        Button("Add Shortcut") {
-                            addingNew = true
-                            showEditor = true
+                        NavigationLink(value: KeybindRoute.add) {
+                            Text("Add Shortcut")
+                                .font(.body.weight(.medium))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 6)
+                                .background(Capsule().fill(Color.accentColor))
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.plain)
                         .padding(.top, 4)
                     }
                     .frame(maxWidth: .infinity)
@@ -33,52 +34,52 @@ struct KeyboardPane: View {
             } else {
                 Section {
                     ForEach(store.userKeybinds) { keybind in
-                        KeybindRow(keybind: keybind)
-                            .contextMenu {
-                                Button("Edit") {
-                                    editing = keybind
-                                    addingNew = false
-                                    showEditor = true
-                                }
-                                Button("Delete", role: .destructive) {
-                                    store.removeKeybind(keybind)
-                                }
+                        NavigationLink(value: KeybindRoute.edit(keybind)) {
+                            KeybindRow(keybind: keybind)
+                        }
+                        .contextMenu {
+                            Button("Delete", role: .destructive) {
+                                store.removeKeybind(keybind)
                             }
-                            .onTapGesture(count: 2) {
-                                editing = keybind
-                                addingNew = false
-                                showEditor = true
-                            }
+                        }
                     }
                 } header: {
                     Text("Custom shortcuts")
                 } footer: {
-                    Text("Right-click a row to edit or delete. Custom shortcuts override Ghostty's defaults for the same trigger.")
+                    Text("Tap a row to edit. Right-click for delete. Custom shortcuts override Ghostty's defaults for the same trigger.")
                 }
             }
 
             Section {
-                Button {
-                    addingNew = true
-                    editing = nil
-                    showEditor = true
-                } label: {
+                NavigationLink(value: KeybindRoute.add) {
                     Label("Add Shortcut…", systemImage: "plus")
                 }
-                .buttonStyle(.plain)
             }
         }
         .formStyle(.grouped)
         .paneToolbar(title: "Keyboard",
                      subtitle: "Custom shortcuts and key bindings.")
-        .sheet(isPresented: $showEditor) {
-            KeybindEditorView(editing: addingNew ? nil : editing) { keybind in
-                if addingNew {
+        .navigationDestination(for: KeybindRoute.self) { route in
+            KeybindEditorView(editing: route.editingKeybind) { keybind in
+                switch route {
+                case .add:
                     store.addKeybind(keybind)
-                } else if let editing {
-                    store.replaceKeybind(editing, with: keybind)
+                case .edit(let old):
+                    store.replaceKeybind(old, with: keybind)
                 }
             }
+        }
+    }
+}
+
+enum KeybindRoute: Hashable {
+    case add
+    case edit(Keybind)
+
+    var editingKeybind: Keybind? {
+        switch self {
+        case .add:        nil
+        case .edit(let k): k
         }
     }
 }
