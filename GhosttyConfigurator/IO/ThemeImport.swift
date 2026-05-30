@@ -2,7 +2,7 @@ import Foundation
 import os
 
 /// Convert third-party terminal color schemes into Ghostty theme format.
-/// Phase 4.5: iTerm2 `.itermcolors`. Alacritty TOML and Windows Terminal JSON
+/// Phase 4.5: ITerm2 `.itermcolors`. Alacritty TOML and Windows Terminal JSON
 /// are stubbed for follow-on (the format-detection switch is in place).
 enum ThemeImport {
     enum Format {
@@ -43,7 +43,7 @@ enum ThemeImport {
 
         switch format {
         case .iterm2:
-            body = try iTerm2.convert(at: url, suggestedName: baseName)
+            body = try ITerm2.convert(at: url, suggestedName: baseName)
         case .windowsTerminal, .unknown:
             throw ImportError.unsupportedFormat
         }
@@ -60,10 +60,10 @@ enum ThemeImport {
     }
 }
 
-// MARK: - iTerm2 importer
+// MARK: - ITerm2 importer
 
-private enum iTerm2 {
-    /// iTerm2 .itermcolors is an XML plist. Keys are color names ("Ansi 0 Color",
+private enum ITerm2 {
+    /// ITerm2 .itermcolors is an XML plist. Keys are color names ("Ansi 0 Color",
     /// "Background Color", etc.); each is a dict with R/G/B `Red Component`,
     /// `Green Component`, `Blue Component` floats 0.0–1.0.
     static func convert(at url: URL, suggestedName _: String) throws -> String {

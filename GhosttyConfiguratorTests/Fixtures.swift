@@ -14,7 +14,7 @@ enum Fixtures {
             throw FixtureError.notFound(name)
         }
         let data = try Data(contentsOf: url)
-        return String(decoding: data, as: UTF8.self)
+        return String(bytes: data, encoding: .utf8) ?? ""
     }
 
     enum FixtureError: Error {

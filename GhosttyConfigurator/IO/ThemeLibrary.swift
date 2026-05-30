@@ -44,7 +44,7 @@ actor ThemeLibrary {
     func load(_ ref: ThemeRef) async throws -> Theme {
         if let cached = parsed[ref.name] { return cached }
         let data = try Data(contentsOf: ref.url)
-        let source = String(decoding: data, as: UTF8.self)
+        let source = (String(bytes: data, encoding: .utf8) ?? "")
         let file = ConfigFile(parsed: ConfigParser.parse(source))
         let theme = makeTheme(from: file, ref: ref)
         parsed[ref.name] = theme

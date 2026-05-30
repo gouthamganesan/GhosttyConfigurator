@@ -47,10 +47,9 @@ final class SchemaStore {
             if fresh.entries.count >= schema.entries.count {
                 schema = fresh
                 Self.writeCache(fresh)
-                Logger.parser
-                    .info(
-                        "SchemaStore: introspected \(fresh.entries.count) entries (ghostty \(version, privacy: .public))"
-                    )
+                Logger.parser.info(
+                    "SchemaStore: introspected \(fresh.entries.count) entries (ghostty \(version, privacy: .public))"
+                )
             }
         } catch {
             let message = String(describing: error)
@@ -110,10 +109,10 @@ final class SchemaStore {
                 let errData = err.fileHandleForReading.readDataToEndOfFile()
                 throw IntrospectionError.processFailed(
                     task.terminationStatus,
-                    String(decoding: errData, as: UTF8.self)
+                    String(bytes: errData, encoding: .utf8) ?? ""
                 )
             }
-            return String(decoding: data, as: UTF8.self)
+            return String(bytes: data, encoding: .utf8) ?? ""
         }.value
     }
 
@@ -131,7 +130,7 @@ final class SchemaStore {
                 try task.run()
                 task.waitUntilExit()
                 let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                let output = String(decoding: data, as: UTF8.self)
+                let output = (String(bytes: data, encoding: .utf8) ?? "")
                 if let first = output.split(separator: "\n").first {
                     let parts = first.split(separator: " ")
                     if parts.count >= 2 { return String(parts[1]) }
@@ -156,7 +155,7 @@ final class SchemaStore {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
 
             if trimmed.isEmpty {
-                if !docBuffer.isEmpty, docBuffer.last != "" {
+                if !docBuffer.isEmpty, !(docBuffer.last?.isEmpty ?? true) {
                     docBuffer.append("")
                 }
                 continue

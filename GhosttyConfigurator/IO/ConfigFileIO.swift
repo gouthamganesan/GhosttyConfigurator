@@ -31,7 +31,7 @@ actor ConfigFileIO {
             return .empty
         }
         let data = try Data(contentsOf: fileURL)
-        let source = String(decoding: data, as: UTF8.self)
+        let source = (String(bytes: data, encoding: .utf8) ?? "")
         lastSavedHash = source.hashValue
         return ConfigFile(parsed: ConfigParser.parse(source))
     }
@@ -74,7 +74,7 @@ actor ConfigFileIO {
     /// committing to a full reload after FSEvents fires.
     func currentDiskHash() -> Int? {
         guard let data = try? Data(contentsOf: fileURL) else { return nil }
-        let source = String(decoding: data, as: UTF8.self)
+        let source = (String(bytes: data, encoding: .utf8) ?? "")
         return source.hashValue
     }
 

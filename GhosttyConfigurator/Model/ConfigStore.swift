@@ -195,7 +195,7 @@ final class ConfigStore {
                 try task.run()
                 task.waitUntilExit()
                 let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                let output = String(decoding: data, as: UTF8.self)
+                let output = (String(bytes: data, encoding: .utf8) ?? "")
                 guard let first = output.split(separator: "\n").first else { return "" }
                 let parts = first.split(separator: " ")
                 return parts.count >= 2 ? String(parts[1]) : String(first)

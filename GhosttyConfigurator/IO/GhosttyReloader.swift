@@ -60,7 +60,7 @@ enum GhosttyReloader {
             task.waitUntilExit()
             if task.terminationStatus != 0 {
                 let data = err.fileHandleForReading.readDataToEndOfFile()
-                let message = String(decoding: data, as: UTF8.self)
+                let message = (String(bytes: data, encoding: .utf8) ?? "")
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 throw ReloadError.osascriptFailed(message)
             }

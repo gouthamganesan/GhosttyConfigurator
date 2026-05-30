@@ -58,7 +58,7 @@ final class SchemaTests: XCTestCase {
         guard (try? task.run()) != nil else { return }
         task.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(decoding: data, as: UTF8.self)
+        let output = (String(bytes: data, encoding: .utf8) ?? "")
 
         let entries = SchemaStore.parse(output)
         XCTAssertGreaterThan(

@@ -53,7 +53,7 @@ final class ConfigParserTests: XCTestCase {
 
     func testParsesEmptyValueAsResetSemantics() {
         let parsed = ConfigParser.parse("font-family =\n")
-        guard case let .kv(kv) = parsed.entries.first else { return XCTFail() }
+        guard case let .kv(kv) = parsed.entries.first else { return XCTFail("expected entry of the asserted variant") }
         XCTAssertEqual(kv.key, "font-family")
         XCTAssertEqual(kv.value, "", "Empty value is preserved (Ghostty's reset-to-default)")
     }
@@ -69,7 +69,8 @@ final class ConfigParserTests: XCTestCase {
 
     func testParsesRequiredInclude() {
         let parsed = ConfigParser.parse("config-file = themes/extra.ghostty\n")
-        guard case let .include(inc) = parsed.entries.first else { return XCTFail() }
+        guard case let .include(inc) = parsed.entries.first
+        else { return XCTFail("expected entry of the asserted variant") }
         XCTAssertFalse(inc.isOptional)
         XCTAssertEqual(inc.path, "themes/extra.ghostty")
     }
@@ -77,7 +78,8 @@ final class ConfigParserTests: XCTestCase {
     func testParsesQuotedIncludePath() {
         // `"?literal"` should be a literal path starting with `?`, not optional.
         let parsed = ConfigParser.parse("config-file = \"?literal\"\n")
-        guard case let .include(inc) = parsed.entries.first else { return XCTFail() }
+        guard case let .include(inc) = parsed.entries.first
+        else { return XCTFail("expected entry of the asserted variant") }
         XCTAssertFalse(inc.isOptional)
         XCTAssertEqual(inc.path, "?literal")
     }
@@ -85,7 +87,7 @@ final class ConfigParserTests: XCTestCase {
     func testSplitsOnFirstEqualsForKeybinds() {
         // keybind values contain `=` — Ghostty splits on the FIRST `=` only.
         let parsed = ConfigParser.parse("keybind = ctrl+a=copy_to_clipboard\n")
-        guard case let .kv(kv) = parsed.entries.first else { return XCTFail() }
+        guard case let .kv(kv) = parsed.entries.first else { return XCTFail("expected entry of the asserted variant") }
         XCTAssertEqual(kv.key, "keybind")
         XCTAssertEqual(kv.value, "ctrl+a=copy_to_clipboard")
     }

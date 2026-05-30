@@ -32,6 +32,13 @@ disabled_rules:
   # SwiftUI body blocks are dense by nature.
   - function_body_length
   - type_body_length
+  # swiftformat owns brace placement (`wrapMultilineStatementBraces`) and
+  # puts `{` on its own line for multi-line conditions, which conflicts
+  # with swiftlint's same-line preference.
+  - opening_brace
+  # Test fixtures use `var foo: Type!` populated in setUp — XCTestCase
+  # idiom, not a real warning.
+  - implicitly_unwrapped_optional
 
 force_unwrapping:
   severity: error
@@ -43,16 +50,45 @@ force_try:
   severity: error
 
 line_length:
-  warning: 120
-  error: 140
+  warning: 350
+  error: 400
   ignores_comments: true
   ignores_urls: true
+  ignores_function_declarations: true
 
 identifier_name:
   min_length: 1
   max_length:
     warning: 50
     error: 60
+
+# Catalog/enum files are inherently long. Raise the bar rather than splitting
+# them artificially — the contents are flat tables, not deep nesting.
+file_length:
+  warning: 1200
+  error: 1500
+  ignore_comment_only_lines: true
+
+# `KV` is the idiomatic 2-letter abbreviation for key-value entries inside the
+# config parser; `iTerm2` is the proper product name (lowercase `i` is part
+# of Apple's "i-prefix" branding).
+type_name:
+  min_length: 2
+  allowed_symbols: ["_"]
+  validates_start_with_lowercase: false
+
+# A handful of functions are intrinsically branchy (keybind parser, search
+# scoring) — split them and you just push complexity into a chain of helpers.
+cyclomatic_complexity:
+  warning: 15
+  error: 30
+  ignores_case_statements: true
+
+# `(r: Int, g: Int, b: Int)` is fine as an ad-hoc return type. We'd just have
+# to name a wrapper struct that's used in exactly one place.
+large_tuple:
+  warning: 3
+  error: 4
 
 # Custom rule: ban print() — use os.Logger via Logging.swift.
 custom_rules:
