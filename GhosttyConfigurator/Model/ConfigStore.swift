@@ -60,8 +60,15 @@ final class ConfigStore {
         let windowPaddingX: Int = 2
         let windowPaddingY: Int = 2
         let windowPaddingBalance: Bool = false
-        let macosNonNativeFullscreen: Bool = false
+        let macosNonNativeFullscreen: MacosNonNativeFullscreen = .off
         let windowSaveState: WindowSaveState = .default
+        let windowTitleFontFamily: String = ""
+        let windowWidth: Int = 0
+        let windowHeight: Int = 0
+        let macosTitlebarProxyIcon: MacosTitlebarProxyIcon = .visible
+        let windowPaddingColor: WindowPaddingColor = .background
+        let windowNewTabPosition: WindowNewTabPosition = .current
+        let resizeOverlay: ResizeOverlay = .afterFirst
 
         // Cursor
         let cursorStyle: CursorStyle = .block
@@ -396,14 +403,54 @@ final class ConfigStore {
         set { setBool("window-padding-balance", newValue, label: "Toggle Padding Balance") }
     }
 
-    var macosNonNativeFullscreen: Bool {
-        get { file.bool(for: "macos-non-native-fullscreen", default: defaults.macosNonNativeFullscreen) }
-        set { setBool("macos-non-native-fullscreen", newValue, label: "Toggle Non-Native Fullscreen") }
+    var macosNonNativeFullscreen: MacosNonNativeFullscreen {
+        get {
+            file.enumValue(MacosNonNativeFullscreen.self,
+                           for: "macos-non-native-fullscreen",
+                           default: defaults.macosNonNativeFullscreen)
+        }
+        set { setEnum("macos-non-native-fullscreen", newValue, label: "Change Non-Native Fullscreen") }
     }
 
     var windowSaveState: WindowSaveState {
         get { file.enumValue(WindowSaveState.self, for: "window-save-state", default: defaults.windowSaveState) }
         set { setEnum("window-save-state", newValue, label: "Change Window Save State") }
+    }
+
+    var windowTitleFontFamily: String {
+        get { file.scalarValue(for: "window-title-font-family") ?? defaults.windowTitleFontFamily }
+        set { setScalar("window-title-font-family", value: newValue, label: "Change Title Font") }
+    }
+
+    /// `window-width` / `window-height` — initial cell-grid size. 0 = OS default.
+    var windowWidth: Int {
+        get { file.int(for: "window-width", default: defaults.windowWidth) }
+        set { setInt("window-width", newValue, label: "Change Initial Window Width") }
+    }
+
+    var windowHeight: Int {
+        get { file.int(for: "window-height", default: defaults.windowHeight) }
+        set { setInt("window-height", newValue, label: "Change Initial Window Height") }
+    }
+
+    var macosTitlebarProxyIcon: MacosTitlebarProxyIcon {
+        get { file.enumValue(MacosTitlebarProxyIcon.self, for: "macos-titlebar-proxy-icon", default: defaults.macosTitlebarProxyIcon) }
+        set { setEnum("macos-titlebar-proxy-icon", newValue, label: "Change Titlebar Proxy Icon") }
+    }
+
+    var windowPaddingColor: WindowPaddingColor {
+        get { file.enumValue(WindowPaddingColor.self, for: "window-padding-color", default: defaults.windowPaddingColor) }
+        set { setEnum("window-padding-color", newValue, label: "Change Padding Color") }
+    }
+
+    var windowNewTabPosition: WindowNewTabPosition {
+        get { file.enumValue(WindowNewTabPosition.self, for: "window-new-tab-position", default: defaults.windowNewTabPosition) }
+        set { setEnum("window-new-tab-position", newValue, label: "Change New Tab Position") }
+    }
+
+    var resizeOverlay: ResizeOverlay {
+        get { file.enumValue(ResizeOverlay.self, for: "resize-overlay", default: defaults.resizeOverlay) }
+        set { setEnum("resize-overlay", newValue, label: "Change Resize Overlay") }
     }
 
     // MARK: - Cursor

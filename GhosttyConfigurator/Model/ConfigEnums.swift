@@ -140,6 +140,87 @@ enum WindowSaveState: String, CaseIterable, Identifiable, Hashable, Sendable {
     }
 }
 
+/// `macos-non-native-fullscreen` — four states, not Bool. Reads `true`/`false`
+/// as the original two, plus `visible-menu` and `padded-notch` variants.
+enum MacosNonNativeFullscreen: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case off = "false"
+    case on = "true"
+    case visibleMenu = "visible-menu"
+    case paddedNotch = "padded-notch"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .off:         "Native (default)"
+        case .on:          "Non-native, hide menu bar"
+        case .visibleMenu: "Non-native, keep menu bar"
+        case .paddedNotch: "Non-native, avoid notch"
+        }
+    }
+}
+
+/// `macos-titlebar-proxy-icon` — show or hide the folder icon in the titlebar.
+enum MacosTitlebarProxyIcon: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case visible, hidden
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .visible: "Visible"
+        case .hidden:  "Hidden"
+        }
+    }
+}
+
+/// `window-padding-color` — how the padding area fills.
+enum WindowPaddingColor: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case background
+    case extend
+    case extendAlways = "extend-always"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .background:   "Background"
+        case .extend:       "Extend nearest cell"
+        case .extendAlways: "Always extend"
+        }
+    }
+}
+
+/// `window-new-tab-position` — insertion point for new tabs.
+enum WindowNewTabPosition: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case current, end
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .current: "After current tab"
+        case .end:     "At end of tab list"
+        }
+    }
+}
+
+/// `resize-overlay` — when the resize popup is shown.
+enum ResizeOverlay: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case always, never
+    case afterFirst = "after-first"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .always:     "Always"
+        case .never:      "Never"
+        case .afterFirst: "After first resize"
+        }
+    }
+}
+
 // MARK: - Clipboard & Mouse
 
 enum ClipboardPermission: String, CaseIterable, Identifiable, Hashable, Sendable {
