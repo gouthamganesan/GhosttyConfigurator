@@ -48,9 +48,11 @@ struct ContentView: View {
         .task {
             store.undoManager = undoManager
             async let schema: () = SchemaStore.shared.loadIfNeeded()
+            async let themes: () = store.loadThemeIndex()
             await store.load()
             store.startWatching()
             await schema
+            await themes
         }
         .onChange(of: undoManager) { _, newValue in
             store.undoManager = newValue

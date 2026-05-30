@@ -20,6 +20,13 @@ final class ConfigStore {
     let fileURL: URL
     let defaults = Defaults()
 
+    // Validation caches. `knownThemes` is nil until the theme index loads —
+    // the validator skips theme checks in that state so it doesn't false-flag.
+    private(set) var knownThemes: Set<String>?
+    @ObservationIgnored private(set) lazy var knownFontFamilies: Set<String> = {
+        Set(NSFontManager.shared.availableFontFamilies)
+    }()
+
     // MARK: - Defaults
 
     struct Defaults: Sendable {
@@ -114,6 +121,23 @@ final class ConfigStore {
             Logger.store.error("load failed: \(String(describing: error), privacy: .public)")
             self.hasLoaded = true
         }
+    }
+
+    /// Populate the theme-name set used by the validator. Cheap (just
+    /// enumerates filenames in the theme directories — doesn't parse them).
+    func loadThemeIndex() async {
+        let refs = await ThemeLibrary.shared.index()
+        self.knownThemes = Set(refs.map(\.name))
+    }
+
+    /// All current lint findings, keyed by Ghostty docKey. Views look up
+    /// their own key via `RowAffix` — no per-pane wiring required.
+    var validationIssues: [String: ValidationIssue] {
+        Validator.issues(
+            for: file,
+            knownThemes: knownThemes,
+            knownFontFamilies: knownFontFamilies
+        )
     }
 
     func startWatching() {
