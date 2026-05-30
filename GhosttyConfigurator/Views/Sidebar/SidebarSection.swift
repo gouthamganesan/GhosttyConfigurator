@@ -62,17 +62,20 @@ enum SidebarSection: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
+    /// Tints per `docs/02-information-architecture.md`. Greys are kept for
+    /// genuinely catch-all rows (Shell, General, About — utilitarian); the
+    /// expressive panes get System Settings-style accent colours.
     var tint: Color {
         switch self {
-        case .appearance: .pink
+        case .appearance: .purple
         case .window: .blue
-        case .font: .indigo
-        case .cursor: .teal
-        case .keyboard: Color(NSColor.systemGray)
+        case .font: .pink
+        case .cursor: .orange
+        case .keyboard: .indigo
         case .shell: Color(NSColor.systemGray)
-        case .clipboardMouse: .green
+        case .clipboardMouse: .cyan
         case .general: Color(NSColor.systemGray)
-        case .advanced: .orange
+        case .advanced: Color(NSColor.systemGray)
         case .about: .blue
         }
     }

@@ -94,7 +94,7 @@ struct ThemeBrowserView: View {
                 } label: {
                     Label("Import…", systemImage: "square.and.arrow.down")
                 }
-                .help("Import a theme from iTerm2 (.itermcolors)")
+                .help("Import a theme from iTerm2 (.itermcolors) or Alacritty (.toml)")
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Apply") {
@@ -122,10 +122,11 @@ struct ThemeBrowserView: View {
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
-        if let itermcolors = UTType(filenameExtension: "itermcolors") {
-            panel.allowedContentTypes = [itermcolors]
+        let importableTypes = ["itermcolors", "toml"].compactMap { UTType(filenameExtension: $0) }
+        if !importableTypes.isEmpty {
+            panel.allowedContentTypes = importableTypes
         }
-        panel.message = "Choose an iTerm2 .itermcolors file to import"
+        panel.message = "Choose an iTerm2 (.itermcolors) or Alacritty (.toml) file to import"
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
         let userThemes = FileManager.default.homeDirectoryForCurrentUser
