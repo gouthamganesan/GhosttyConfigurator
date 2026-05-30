@@ -4,7 +4,41 @@ struct KeyboardPane: View {
     @Environment(ConfigStore.self) private var store
 
     var body: some View {
+        @Bindable var store = store
+
         Form {
+            Section {
+                LabeledContent {
+                    Picker("", selection: $store.macosOptionAsAlt) {
+                        ForEach(MacosOptionAsAlt.allCases) { Text($0.label).tag($0) }
+                    }
+                    .labelsHidden().pickerStyle(.menu).fixedSize()
+                } label: {
+                    rowLabel(
+                        "Option as Alt",
+                        modified: store.isModified(
+                            \.macosOptionAsAlt,
+                            default: store.defaults.macosOptionAsAlt
+                        ),
+                        docKey: "macos-option-as-alt"
+                    )
+                }
+
+                Toggle(isOn: $store.macosShortcuts) {
+                    rowLabel(
+                        "macOS menu shortcuts",
+                        modified: store.isModified(\.macosShortcuts, default: store.defaults.macosShortcuts),
+                        docKey: "macos-shortcuts"
+                    )
+                }
+            } header: {
+                Text("macOS modifiers")
+            } footer: {
+                Text(
+                    "**Option as Alt** lets the Option key send Meta/Alt to terminal programs (Vim, Emacs, readline). Off keeps macOS's standard option-character behaviour (option-e → é). **Menu shortcuts** can be disabled if a custom binding collides with a menu item."
+                )
+            }
+
             if store.userKeybinds.isEmpty {
                 Section {
                     VStack(spacing: 8) {
@@ -58,6 +92,10 @@ struct KeyboardPane: View {
                 NavigationLink(value: KeybindRoute.add) {
                     Label("Add Shortcut…", systemImage: "plus")
                 }
+            }
+
+            if let defaults = store.defaultKeybinds, !defaults.isEmpty {
+                DefaultKeybindsSection(keybinds: defaults)
             }
         }
         .formStyle(.grouped)
@@ -171,6 +209,54 @@ private struct KeybindRow: View {
         case "space": "␣"
         case "delete", "backspace": "⌫"
         default: key
+        }
+    }
+}
+
+// MARK: - Built-in (default) keybinds
+
+/// Read-only listing of Ghostty's built-in shortcuts, grouped by action
+/// category and collapsed into DisclosureGroups so they don't dominate the
+/// pane. Surfaces what the user is overriding when they add a custom row.
+private struct DefaultKeybindsSection: View {
+    let keybinds: [Keybind]
+
+    var body: some View {
+        Section {
+            ForEach(groupedCategories, id: \.0) { category, items in
+                DisclosureGroup {
+                    ForEach(items) { keybind in
+                        KeybindRow(keybind: keybind)
+                            .padding(.vertical, 2)
+                    }
+                } label: {
+                    HStack {
+                        Text(category.label)
+                        Spacer()
+                        Text("\(items.count)")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+        } header: {
+            Text("Built-in shortcuts")
+        } footer: {
+            Text(
+                "Ghostty's defaults, read from `ghostty +list-keybinds --default`. To override one, add a custom shortcut above with the same trigger."
+            )
+        }
+    }
+
+    /// Stable per-pane category ordering (matches the action picker's display
+    /// order). Categories with no entries are dropped.
+    private var groupedCategories: [(ActionLabels.Category, [Keybind])] {
+        let buckets = Dictionary(grouping: keybinds) { kb in
+            ActionLabels.entry(for: kb.action.verb)?.category ?? .custom
+        }
+        return ActionLabels.Category.allCases.compactMap { category in
+            guard let items = buckets[category], !items.isEmpty else { return nil }
+            return (category, items)
         }
     }
 }

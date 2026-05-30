@@ -25,6 +25,11 @@ final class ConfigStore {
     /// that returned nothing parseable.
     private(set) var ghosttyVersion: String?
 
+    /// Cached `ghostty +list-keybinds --default` output, parsed. `nil` until
+    /// the first load attempt completes; empty array on failure (Ghostty
+    /// missing, exec failure, or output that failed to parse).
+    private(set) var defaultKeybinds: [Keybind]?
+
     // Validation caches. `knownThemes` is nil until the theme index loads —
     // the validator skips theme checks in that state so it doesn't false-flag.
     private(set) var knownThemes: Set<String>?
@@ -126,6 +131,10 @@ final class ConfigStore {
         let mouseReporting: Bool = true
         let focusFollowsMouse: Bool = false
 
+        // Keyboard
+        let macosOptionAsAlt: MacosOptionAsAlt = .default
+        let macosShortcuts: Bool = true
+
         // General
         let autoUpdate: AutoUpdateMode = .check
         let autoUpdateChannel: AutoUpdateChannel = .stable
@@ -180,6 +189,45 @@ final class ConfigStore {
     /// About hero. Silent on failure — the About pane just hides the line.
     func loadGhosttyVersion() async {
         ghosttyVersion = await Self.detectGhosttyVersion()
+    }
+
+    /// Shell out to `ghostty +list-keybinds --default` once and cache the
+    /// parsed list for the Keyboard pane's "Built-in shortcuts" disclosure.
+    /// Silent on failure — the section just renders empty.
+    func loadDefaultKeybinds() async {
+        defaultKeybinds = await Self.fetchDefaultKeybinds()
+    }
+
+    private static func fetchDefaultKeybinds() async -> [Keybind] {
+        await Task.detached(priority: .utility) { () -> [Keybind] in
+            guard let cli = ConfigPaths.ghosttyCLIURL() else { return [] }
+            let task = Process()
+            task.executableURL = cli
+            task.arguments = ["+list-keybinds", "--default"]
+            let pipe = Pipe()
+            task.standardOutput = pipe
+            task.standardError = Pipe()
+            do {
+                try task.run()
+                task.waitUntilExit()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                let output = String(bytes: data, encoding: .utf8) ?? ""
+                return output.split(separator: "\n").compactMap { rawLine -> Keybind? in
+                    var line = rawLine.trimmingCharacters(in: .whitespaces)
+                    // Lines look like `keybind = trigger=action`; strip the
+                    // `keybind = ` prefix so we feed `KeybindParser` the same
+                    // post-`=` payload it sees for user keybinds.
+                    if line.lowercased().hasPrefix("keybind"),
+                       let eq = line.firstIndex(of: "=")
+                    {
+                        line = String(line[line.index(after: eq)...]).trimmingCharacters(in: .whitespaces)
+                    }
+                    return KeybindParser.parse(line)
+                }
+            } catch {
+                return []
+            }
+        }.value
     }
 
     private static func detectGhosttyVersion() async -> String {
@@ -950,6 +998,32 @@ final class ConfigStore {
     var macosSecureInputIndication: Bool {
         get { file.bool(for: "macos-secure-input-indication", default: defaults.macosSecureInputIndication) }
         set { setBool("macos-secure-input-indication", newValue, label: "Toggle Secure Input Indication") }
+    }
+
+    // MARK: - Keyboard
+
+    /// `macos-option-as-alt` — five-state picker. `.default` means the key
+    /// is absent; the other four map to documented Ghostty raw values
+    /// (`false` / `true` / `left` / `right`).
+    var macosOptionAsAlt: MacosOptionAsAlt {
+        get {
+            guard let raw = file.scalarValue(for: "macos-option-as-alt"), !raw.isEmpty else {
+                return .default
+            }
+            return MacosOptionAsAlt(rawValue: raw) ?? .default
+        }
+        set {
+            if newValue == .default {
+                deleteKey("macos-option-as-alt", label: "Reset Option as Alt")
+            } else {
+                setScalar("macos-option-as-alt", value: newValue.rawValue, label: "Change Option as Alt")
+            }
+        }
+    }
+
+    var macosShortcuts: Bool {
+        get { file.bool(for: "macos-shortcuts", default: defaults.macosShortcuts) }
+        set { setBool("macos-shortcuts", newValue, label: "Toggle macOS Shortcuts") }
     }
 
     // MARK: - Keybinds

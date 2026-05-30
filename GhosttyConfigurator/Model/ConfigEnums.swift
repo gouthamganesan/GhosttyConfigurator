@@ -313,6 +313,34 @@ enum ResizeOverlay: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+// MARK: - Keyboard
+
+/// `macos-option-as-alt` — whether macOS Option keys behave as Alt/Meta.
+/// 5-state model: `default` represents "key absent" (Ghostty's documented
+/// default = `false`, but kept distinct so the UI can show "Auto" without
+/// writing the key); the remaining four map to the documented raw values.
+enum MacosOptionAsAlt: String, CaseIterable, Identifiable, Hashable {
+    case `default`
+    case off = "false"
+    case both = "true"
+    case left
+    case right
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .default: "Auto (Ghostty default)"
+        case .off: "Off"
+        case .both: "Both Option keys"
+        case .left: "Left Option only"
+        case .right: "Right Option only"
+        }
+    }
+}
+
 // MARK: - Clipboard & Mouse
 
 enum ClipboardPermission: String, CaseIterable, Identifiable, Hashable {

@@ -375,6 +375,22 @@ enum SearchCatalog {
             docKey: "keybind",
             keywords: ["hotkey", "shortcut", "binding", "keyboard", "kbd"]
         ),
+        .init(
+            id: "macos-option-as-alt",
+            pane: .keyboard,
+            title: "Option as Alt",
+            subtitle: "Send Alt/Meta to terminal programs",
+            docKey: "macos-option-as-alt",
+            keywords: ["option", "alt", "meta", "vim", "emacs", "modifier"]
+        ),
+        .init(
+            id: "macos-shortcuts",
+            pane: .keyboard,
+            title: "macOS menu shortcuts",
+            subtitle: "Allow menu items to receive shortcuts",
+            docKey: "macos-shortcuts",
+            keywords: ["menu", "shortcut", "macos", "keybinding"]
+        ),
 
         // MARK: Shell
 
