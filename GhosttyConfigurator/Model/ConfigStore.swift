@@ -99,7 +99,10 @@ final class ConfigStore {
         let shellFeatureCursor: Bool = true
         let shellFeatureSudo: Bool = false
         let shellFeatureTitle: Bool = true
+        let shellFeatureSshEnv: Bool = false
+        let shellFeatureSshTerminfo: Bool = false
         let shellCommand: String = ""
+        let initialCommand: String = ""
         let workingDirectory: String = ""
         let term: String = "xterm-ghostty"
 
@@ -650,9 +653,60 @@ final class ConfigStore {
         set { setCommaFlag("shell-integration-features", flag: "title", enabled: newValue, label: "Toggle Title Integration") }
     }
 
+    var shellFeatureSshEnv: Bool {
+        get { isShellFeatureEnabled("ssh-env", default: defaults.shellFeatureSshEnv) }
+        set { setCommaFlag("shell-integration-features", flag: "ssh-env", enabled: newValue, label: "Toggle SSH Env Forwarding") }
+    }
+
+    var shellFeatureSshTerminfo: Bool {
+        get { isShellFeatureEnabled("ssh-terminfo", default: defaults.shellFeatureSshTerminfo) }
+        set { setCommaFlag("shell-integration-features", flag: "ssh-terminfo", enabled: newValue, label: "Toggle SSH Terminfo Forwarding") }
+    }
+
     var shellCommand: String {
         get { file.scalarValue(for: "command") ?? defaults.shellCommand }
         set { setScalar("command", value: newValue, label: "Change Command") }
+    }
+
+    var initialCommand: String {
+        get { file.scalarValue(for: "initial-command") ?? defaults.initialCommand }
+        set {
+            if newValue.isEmpty {
+                deleteKey("initial-command", label: "Clear Initial Command")
+            } else {
+                setScalar("initial-command", value: newValue, label: "Change Initial Command")
+            }
+        }
+    }
+
+    /// Environment variables passed to launched commands. Reads parse the
+    /// `env = KEY=VALUE` list; writes rewrite the entire list in one shot,
+    /// so the editor can add/remove/reorder rows arbitrarily.
+    var envVars: [EnvVar] {
+        get { file.envVars() }
+        set { setEnvVars(newValue) }
+    }
+
+    private func setEnvVars(_ vars: [EnvVar]) {
+        let priorValues = file.listValues(for: "env")
+        // Drop empty-key rows; trim whitespace from keys to keep the file tidy.
+        let serialized = vars
+            .map { EnvVar(key: $0.key.trimmingCharacters(in: .whitespaces), value: $0.value) }
+            .filter { !$0.key.isEmpty }
+            .map(\.serialized)
+        guard priorValues != serialized else { return }
+        undoManager?.registerUndo(withTarget: self) { store in
+            store.applyEnvVarsUndo(priorValues, label: "Edit Environment Variables")
+        }
+        undoManager?.setActionName("Edit Environment Variables")
+        file.setList("env", values: serialized)
+        schedulePersist()
+    }
+
+    private func applyEnvVarsUndo(_ values: [String], label: String) {
+        undoManager?.setActionName(label)
+        file.setList("env", values: values)
+        schedulePersist()
     }
 
     var workingDirectory: String {

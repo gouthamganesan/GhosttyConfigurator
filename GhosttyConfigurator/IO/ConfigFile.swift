@@ -233,6 +233,13 @@ struct ConfigFile: Hashable, Sendable {
         return .none
     }
 
+    /// All `env = KEY=VALUE` entries, parsed in source order. Malformed
+    /// rows (missing `=` or empty key) are dropped — they wouldn't round-trip
+    /// safely through the editor anyway.
+    func envVars() -> [EnvVar] {
+        listValues(for: "env").compactMap { EnvVar.parse($0) }
+    }
+
     /// Derive the `cursor-text` 4-state from the raw config value.
     func cursorTextMode() -> CursorTextMode {
         guard let raw = scalarValue(for: "cursor-text"), !raw.isEmpty else {
