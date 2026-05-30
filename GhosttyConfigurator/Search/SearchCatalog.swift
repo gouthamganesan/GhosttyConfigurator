@@ -668,6 +668,71 @@ enum SearchCatalog {
             docKey: "macos-secure-input-indication",
             keywords: ["security", "indicator"]
         ),
+        .init(
+            id: "quit-after-last-window-closed-delay",
+            pane: .general,
+            title: "Quit delay",
+            subtitle: "How long to stay running after the last window closes",
+            docKey: "quit-after-last-window-closed-delay",
+            keywords: ["quit", "delay", "duration", "idle"]
+        ),
+        .init(
+            id: "macos-applescript",
+            pane: .general,
+            title: "AppleScript integration",
+            docKey: "macos-applescript",
+            keywords: ["applescript", "automation", "scripting"]
+        ),
+        .init(
+            id: "macos-dock-drop-behavior",
+            pane: .general,
+            title: "Dock drop behaviour",
+            subtitle: "What happens when you drop files on Ghostty's dock icon",
+            docKey: "macos-dock-drop-behavior",
+            keywords: ["dock", "drag", "drop", "tab", "window"]
+        ),
+        .init(
+            id: "macos-icon",
+            pane: .general,
+            title: "Dock icon",
+            subtitle: "Official, alternates, or a custom style",
+            docKey: "macos-icon",
+            keywords: ["dock", "icon", "appearance", "blueprint", "retro"]
+        ),
+        .init(
+            id: "macos-icon-frame",
+            pane: .general,
+            title: "Icon frame material",
+            docKey: "macos-icon-frame",
+            keywords: ["icon", "frame", "aluminum", "chrome", "beige", "plastic"]
+        ),
+        .init(
+            id: "macos-icon-ghost-color",
+            pane: .general,
+            title: "Icon ghost colour",
+            docKey: "macos-icon-ghost-color",
+            keywords: ["icon", "color", "ghost"]
+        ),
+        .init(
+            id: "macos-icon-screen-color",
+            pane: .general,
+            title: "Icon screen gradient",
+            docKey: "macos-icon-screen-color",
+            keywords: ["icon", "color", "gradient", "screen"]
+        ),
+        .init(
+            id: "launch-at-login",
+            pane: .general,
+            title: "Launch Ghostty at login",
+            subtitle: "Open via System Settings → Login Items",
+            keywords: ["login", "startup", "autostart"]
+        ),
+        .init(
+            id: "check-for-updates-now",
+            pane: .general,
+            title: "Check for updates now",
+            keywords: ["update", "check", "sparkle"]
+        ),
 
         // MARK: About
 

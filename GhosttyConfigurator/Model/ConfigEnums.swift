@@ -570,6 +570,81 @@ enum ConfirmCloseSurface: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+/// `macos-dock-drop-behavior` — windowing when a file/folder is dropped on
+/// Ghostty's dock icon.
+enum MacosDockDropBehavior: String, CaseIterable, Identifiable, Hashable {
+    case newTab = "new-tab"
+    case newWindow = "new-window"
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .newTab: "New tab in current window"
+        case .newWindow: "New window"
+        }
+    }
+}
+
+/// `macos-icon` — dock / app-switcher icon variant. Ghostty also exposes
+/// `custom` (image at custom path) and `custom-style` (recolour the official
+/// icon) which require additional sibling config; the latter unlocks the
+/// frame/ghost/screen-colour rows in the UI.
+enum MacosIcon: String, CaseIterable, Identifiable, Hashable {
+    case official
+    case blueprint
+    case chalkboard
+    case microchip
+    case glass
+    case holographic
+    case paper
+    case retro
+    case xray
+    case custom
+    case customStyle = "custom-style"
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .official: "Official"
+        case .blueprint: "Blueprint"
+        case .chalkboard: "Chalkboard"
+        case .microchip: "Microchip"
+        case .glass: "Glass"
+        case .holographic: "Holographic"
+        case .paper: "Paper"
+        case .retro: "Retro"
+        case .xray: "X-ray"
+        case .custom: "Custom image…"
+        case .customStyle: "Custom style (re-colour official)"
+        }
+    }
+}
+
+/// `macos-icon-frame` — material for the device frame around the icon. Only
+/// meaningful when `macos-icon = custom-style`.
+enum MacosIconFrame: String, CaseIterable, Identifiable, Hashable {
+    case aluminum, beige, plastic, chrome
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .aluminum: "Brushed aluminum"
+        case .beige: "Beige (90's)"
+        case .plastic: "Glossy plastic"
+        case .chrome: "Chrome"
+        }
+    }
+}
+
 enum AutoUpdateMode: String, CaseIterable, Identifiable, Hashable {
     case off, check, download
 

@@ -144,6 +144,13 @@ final class ConfigStore {
         let bellAudioVolume: Double = 0.5
         let macosAutoSecureInput: Bool = true
         let macosSecureInputIndication: Bool = true
+        let quitDelay: String = ""
+        let macosApplescript: Bool = true
+        let macosDockDropBehavior: MacosDockDropBehavior = .newTab
+        let macosIcon: MacosIcon = .official
+        let macosIconFrame: MacosIconFrame = .aluminum
+        let macosIconGhostColorFallback: Color = .init(red: 0.95, green: 0.95, blue: 0.95)
+        let macosIconScreenColor: String = ""
     }
 
     // MARK: - IO plumbing
@@ -1012,6 +1019,85 @@ final class ConfigStore {
     var macosAutoSecureInput: Bool {
         get { file.bool(for: "macos-auto-secure-input", default: defaults.macosAutoSecureInput) }
         set { setBool("macos-auto-secure-input", newValue, label: "Toggle Auto Secure Input") }
+    }
+
+    /// `quit-after-last-window-closed-delay` — duration string ("1h30m", "30s",
+    /// etc.). Empty = key absent = Ghostty's default. Validation lives in the
+    /// pane (the format is too forgiving to enforce here).
+    var quitDelay: String {
+        get { file.scalarValue(for: "quit-after-last-window-closed-delay") ?? defaults.quitDelay }
+        set {
+            let trimmed = newValue.trimmingCharacters(in: .whitespaces)
+            if trimmed.isEmpty {
+                deleteKey("quit-after-last-window-closed-delay", label: "Clear Quit Delay")
+            } else {
+                setScalar("quit-after-last-window-closed-delay", value: trimmed, label: "Change Quit Delay")
+            }
+        }
+    }
+
+    var macosApplescript: Bool {
+        get { file.bool(for: "macos-applescript", default: defaults.macosApplescript) }
+        set { setBool("macos-applescript", newValue, label: "Toggle AppleScript Integration") }
+    }
+
+    var macosDockDropBehavior: MacosDockDropBehavior {
+        get { file.enumValue(
+            MacosDockDropBehavior.self,
+            for: "macos-dock-drop-behavior",
+            default: defaults.macosDockDropBehavior
+        ) }
+        set { setEnum("macos-dock-drop-behavior", newValue, label: "Change Dock Drop Behaviour") }
+    }
+
+    var macosIcon: MacosIcon {
+        get { file.enumValue(MacosIcon.self, for: "macos-icon", default: defaults.macosIcon) }
+        set { setEnum("macos-icon", newValue, label: "Change Dock Icon") }
+    }
+
+    var macosIconFrame: MacosIconFrame {
+        get { file.enumValue(MacosIconFrame.self, for: "macos-icon-frame", default: defaults.macosIconFrame) }
+        set { setEnum("macos-icon-frame", newValue, label: "Change Icon Frame") }
+    }
+
+    /// `macos-icon-ghost-color` — only meaningful when `macos-icon = custom-style`.
+    var macosIconGhostColor: Color {
+        get { file.color(for: "macos-icon-ghost-color") ?? defaults.macosIconGhostColorFallback }
+        set { setScalar(
+            "macos-icon-ghost-color",
+            value: ColorParsing.hexString(from: newValue),
+            label: "Change Icon Ghost Color"
+        ) }
+    }
+
+    var isMacosIconGhostColorAuto: Bool {
+        get { file.scalarValue(for: "macos-icon-ghost-color") == nil }
+        set {
+            if newValue {
+                deleteKey("macos-icon-ghost-color", label: "Reset Icon Ghost Color")
+            } else {
+                setScalar(
+                    "macos-icon-ghost-color",
+                    value: ColorParsing.hexString(from: defaults.macosIconGhostColorFallback),
+                    label: "Set Icon Ghost Color"
+                )
+            }
+        }
+    }
+
+    /// `macos-icon-screen-color` — gradient spec (comma-separated hex/named).
+    /// Exposed as a free-form TextField since rendering a gradient editor is
+    /// outside the scope of B6.
+    var macosIconScreenColor: String {
+        get { file.scalarValue(for: "macos-icon-screen-color") ?? defaults.macosIconScreenColor }
+        set {
+            let trimmed = newValue.trimmingCharacters(in: .whitespaces)
+            if trimmed.isEmpty {
+                deleteKey("macos-icon-screen-color", label: "Clear Icon Screen Color")
+            } else {
+                setScalar("macos-icon-screen-color", value: trimmed, label: "Change Icon Screen Color")
+            }
+        }
     }
 
     var macosSecureInputIndication: Bool {
