@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct GeneralPane: View {
     @Environment(ConfigStore.self) private var store
@@ -15,6 +16,7 @@ struct GeneralPane: View {
             updatesSection(store: store)
             closingSection(store: store)
             notificationsSection(store: store)
+            bellSection(store: store)
             macOSSection(store: store)
             dockIconSection(store: store)
             securitySection(store: store)
@@ -164,13 +166,138 @@ struct GeneralPane: View {
         return Section {
             Toggle(isOn: $store.desktopNotifications) {
                 rowLabel(
-                    "Desktop notifications",
+                    "Allow desktop notifications from programs",
                     modified: store.isModified(
                         \.desktopNotifications,
                         default: store.defaults.desktopNotifications
                     ),
                     docKey: "desktop-notifications"
                 )
+            }
+
+            LabeledContent {
+                Picker("", selection: $store.notifyOnCommandFinish) {
+                    ForEach(NotifyOnCommandFinish.allCases) { Text($0.label).tag($0) }
+                }
+                .labelsHidden().pickerStyle(.menu).fixedSize()
+            } label: {
+                rowLabel(
+                    "Notify when a command finishes",
+                    modified: store.isModified(
+                        \.notifyOnCommandFinish,
+                        default: store.defaults.notifyOnCommandFinish
+                    ),
+                    docKey: "notify-on-command-finish"
+                )
+            }
+
+            if store.notifyOnCommandFinish != .never {
+                LabeledContent {
+                    TextField("e.g. 5s, 30s, 1m", text: $store.notifyOnCommandFinishAfter)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 160)
+                } label: {
+                    rowLabel(
+                        "Only after running for",
+                        modified: !store.notifyOnCommandFinishAfter.isEmpty,
+                        docKey: "notify-on-command-finish-after"
+                    )
+                }
+
+                LabeledContent {
+                    HStack(spacing: 14) {
+                        Toggle("Bell", isOn: $store.notifyActionBell).toggleStyle(.checkbox)
+                        Toggle("Notification", isOn: $store.notifyActionNotify).toggleStyle(.checkbox)
+                    }
+                } label: {
+                    rowLabel(
+                        "Notification style",
+                        modified: store.isModified(\.notifyActionBell, default: store.defaults.notifyActionBell)
+                            || store.isModified(\.notifyActionNotify, default: store.defaults.notifyActionNotify),
+                        docKey: "notify-on-command-finish-action"
+                    )
+                }
+            }
+
+            LabeledContent {
+                HStack(spacing: 14) {
+                    Toggle("Clipboard copied", isOn: $store.appNotificationClipboardCopy).toggleStyle(.checkbox)
+                    Toggle("Config reloaded", isOn: $store.appNotificationConfigReload).toggleStyle(.checkbox)
+                }
+            } label: {
+                rowLabel(
+                    "In-app toasts",
+                    modified: store.isModified(
+                        \.appNotificationClipboardCopy,
+                        default: store.defaults.appNotificationClipboardCopy
+                    )
+                        || store.isModified(
+                            \.appNotificationConfigReload,
+                            default: store.defaults.appNotificationConfigReload
+                        ),
+                    docKey: "app-notifications"
+                )
+            }
+        } header: {
+            Text("Notifications")
+        } footer: {
+            Text(
+                "Command-finished notifications need shell integration (or OSC 133) so Ghostty knows when a command actually wraps."
+            )
+        }
+    }
+
+    private func bellSection(store: ConfigStore) -> some View {
+        @Bindable var store = store
+        return Section {
+            LabeledContent {
+                VStack(alignment: .trailing, spacing: 4) {
+                    Toggle("System alert sound", isOn: $store.bellFeatureSystem).toggleStyle(.checkbox)
+                    Toggle("Custom audio file", isOn: $store.bellFeatureAudio).toggleStyle(.checkbox)
+                    Toggle("Bounce dock icon", isOn: $store.bellFeatureAttention).toggleStyle(.checkbox)
+                    Toggle("🔔 in window title", isOn: $store.bellFeatureTitle).toggleStyle(.checkbox)
+                    Toggle("Highlight surface border", isOn: $store.bellFeatureBorder).toggleStyle(.checkbox)
+                }
+            } label: {
+                rowLabel(
+                    "Bell features",
+                    modified: store.isModified(\.bellFeatureSystem, default: store.defaults.bellFeatureSystem)
+                        || store.isModified(\.bellFeatureAudio, default: store.defaults.bellFeatureAudio)
+                        || store.isModified(\.bellFeatureAttention, default: store.defaults.bellFeatureAttention)
+                        || store.isModified(\.bellFeatureTitle, default: store.defaults.bellFeatureTitle)
+                        || store.isModified(\.bellFeatureBorder, default: store.defaults.bellFeatureBorder),
+                    docKey: "bell-features"
+                )
+            }
+
+            if store.bellFeatureAudio {
+                LabeledContent {
+                    HStack(spacing: 8) {
+                        Text(store.bellAudioPath.isEmpty ? "Not set" : (store.bellAudioPath as NSString)
+                            .lastPathComponent)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .frame(maxWidth: 200, alignment: .trailing)
+                        Button("Choose…") { pickBellAudio() }
+                        if !store.bellAudioPath.isEmpty {
+                            Button {
+                                store.bellAudioPath = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.tertiary)
+                            }
+                            .buttonStyle(.borderless)
+                            .help("Clear the audio path")
+                        }
+                    }
+                } label: {
+                    rowLabel(
+                        "Audio file",
+                        modified: !store.bellAudioPath.isEmpty,
+                        docKey: "bell-audio-path"
+                    )
+                }
             }
 
             LabeledContent {
@@ -181,15 +308,20 @@ struct GeneralPane: View {
                     trailingLabel: "Loud"
                 )
                 .frame(width: 240)
+                .disabled(!store.bellFeatureAudio)
             } label: {
                 rowLabel(
-                    "Bell volume",
+                    "Audio volume",
                     modified: store.isModified(\.bellAudioVolume, default: store.defaults.bellAudioVolume),
                     docKey: "bell-audio-volume"
                 )
             }
         } header: {
-            Text("Notifications")
+            Text("Bell")
+        } footer: {
+            Text(
+                "**Attention** bounces the dock icon when Ghostty is unfocused. **Title** marks the surface with 🔔 until you re-focus. **Audio** plays the chosen file if one is set."
+            )
         }
     }
 
@@ -351,5 +483,18 @@ struct GeneralPane: View {
             checkUpdatesError = String(describing: error)
             showCheckUpdatesError = true
         }
+    }
+
+    private func pickBellAudio() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        // Ghostty accepts any system-decodable audio file; restrict to the
+        // common ones it documents (wav, mp3, aiff) for user clarity.
+        panel.allowedContentTypes = [.audio, .wav, .mp3, .aiff].compactMap { $0 }
+        panel.message = "Choose an audio file for the bell"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        store.bellAudioPath = url.path
     }
 }

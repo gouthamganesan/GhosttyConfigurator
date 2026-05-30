@@ -733,6 +733,50 @@ enum SearchCatalog {
             title: "Check for updates now",
             keywords: ["update", "check", "sparkle"]
         ),
+        .init(
+            id: "notify-on-command-finish",
+            pane: .general,
+            title: "Notify when a command finishes",
+            docKey: "notify-on-command-finish",
+            keywords: ["notify", "command", "finished", "background"]
+        ),
+        .init(
+            id: "notify-on-command-finish-after",
+            pane: .general,
+            title: "Command-finish threshold",
+            docKey: "notify-on-command-finish-after",
+            keywords: ["notify", "delay", "duration"]
+        ),
+        .init(
+            id: "notify-on-command-finish-action",
+            pane: .general,
+            title: "Command-finish notification style",
+            docKey: "notify-on-command-finish-action",
+            keywords: ["notify", "bell", "alert"]
+        ),
+        .init(
+            id: "app-notifications",
+            pane: .general,
+            title: "In-app toasts",
+            subtitle: "Clipboard / config-reload notifications",
+            docKey: "app-notifications",
+            keywords: ["toast", "in-app", "clipboard", "reload"]
+        ),
+        .init(
+            id: "bell-features",
+            pane: .general,
+            title: "Bell features",
+            subtitle: "System sound, audio, dock bounce, title, border",
+            docKey: "bell-features",
+            keywords: ["bell", "alert", "audio", "title", "border", "attention"]
+        ),
+        .init(
+            id: "bell-audio-path",
+            pane: .general,
+            title: "Bell audio file",
+            docKey: "bell-audio-path",
+            keywords: ["bell", "audio", "sound", "wav", "mp3", "aiff"]
+        ),
 
         // MARK: About
 

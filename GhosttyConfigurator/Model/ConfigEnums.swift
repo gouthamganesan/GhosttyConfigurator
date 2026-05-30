@@ -645,6 +645,23 @@ enum MacosIconFrame: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+/// `notify-on-command-finish` — when to send command-finished notifications.
+enum NotifyOnCommandFinish: String, CaseIterable, Identifiable, Hashable {
+    case never, unfocused, always
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .never: "Never (default)"
+        case .unfocused: "Only when Ghostty is unfocused"
+        case .always: "Always"
+        }
+    }
+}
+
 enum AutoUpdateMode: String, CaseIterable, Identifiable, Hashable {
     case off, check, download
 

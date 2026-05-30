@@ -151,6 +151,20 @@ final class ConfigStore {
         let macosIconFrame: MacosIconFrame = .aluminum
         let macosIconGhostColorFallback: Color = .init(red: 0.95, green: 0.95, blue: 0.95)
         let macosIconScreenColor: String = ""
+
+        // Notifications + Bell (A6)
+        let notifyOnCommandFinish: NotifyOnCommandFinish = .never
+        let notifyOnCommandFinishAfter: String = ""
+        let notifyActionBell: Bool = true
+        let notifyActionNotify: Bool = false
+        let appNotificationClipboardCopy: Bool = true
+        let appNotificationConfigReload: Bool = true
+        let bellFeatureSystem: Bool = false
+        let bellFeatureAudio: Bool = false
+        let bellFeatureAttention: Bool = true
+        let bellFeatureTitle: Bool = true
+        let bellFeatureBorder: Bool = false
+        let bellAudioPath: String = ""
     }
 
     // MARK: - IO plumbing
@@ -1221,7 +1235,7 @@ final class ConfigStore {
 
     // MARK: - Setter pipeline
 
-    private func setScalar(_ key: String, value: String, label: String) {
+    func setScalar(_ key: String, value: String, label: String) {
         let old = file.scalarValue(for: key)
         let oldDisplay = old ?? ""
         guard oldDisplay != value else { return }
@@ -1241,19 +1255,19 @@ final class ConfigStore {
         schedulePersist()
     }
 
-    private func setBool(_ key: String, _ value: Bool, label: String) {
+    func setBool(_ key: String, _ value: Bool, label: String) {
         setScalar(key, value: value ? "true" : "false", label: label)
     }
 
-    private func setInt(_ key: String, _ value: Int, label: String) {
+    func setInt(_ key: String, _ value: Int, label: String) {
         setScalar(key, value: String(value), label: label)
     }
 
-    private func setDouble(_ key: String, _ value: Double, label: String) {
+    func setDouble(_ key: String, _ value: Double, label: String) {
         setScalar(key, value: formatNumber(value), label: label)
     }
 
-    private func setEnum<T: RawRepresentable>(_ key: String, _ value: T, label: String) where T.RawValue == String {
+    func setEnum<T: RawRepresentable>(_ key: String, _ value: T, label: String) where T.RawValue == String {
         setScalar(key, value: value.rawValue, label: label)
     }
 
@@ -1293,7 +1307,7 @@ final class ConfigStore {
         schedulePersist()
     }
 
-    private func setCommaFlag(_ key: String, flag: String, enabled: Bool, label: String) {
+    func setCommaFlag(_ key: String, flag: String, enabled: Bool, label: String) {
         let priorFlags = file.commaFlags(for: key)
         undoManager?.registerUndo(withTarget: self) { store in
             MainActor.assumeIsolated {
@@ -1314,7 +1328,7 @@ final class ConfigStore {
         schedulePersist()
     }
 
-    private func deleteKey(_ key: String, label: String) {
+    func deleteKey(_ key: String, label: String) {
         guard file.contains(key: key) else { return }
         let priorValues = file.listValues(for: key)
         undoManager?.registerUndo(withTarget: self) { store in
@@ -1365,7 +1379,7 @@ final class ConfigStore {
     /// `shell-integration-features`). Recognises the `no-` prefix to
     /// explicitly disable, falls back to `defaultValue` when neither form
     /// is present.
-    private func isCommaFlagEnabled(_ key: String, flag: String, default defaultValue: Bool) -> Bool {
+    func isCommaFlagEnabled(_ key: String, flag: String, default defaultValue: Bool) -> Bool {
         let flags = file.commaFlags(for: key)
         if flags.contains(flag) { return true }
         if flags.contains("no-\(flag)") { return false }
