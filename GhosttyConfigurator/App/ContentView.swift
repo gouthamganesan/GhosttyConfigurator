@@ -13,10 +13,11 @@ struct ContentView: View {
 
     @Environment(\.undoManager) private var undoManager
     @State private var installBannerDismissed: Bool = false
+    @State private var searchText: String = ""
 
     var body: some View {
         NavigationSplitView(columnVisibility: .constant(.all)) {
-            Sidebar(selection: selection)
+            Sidebar(selection: selection, searchText: $searchText)
         } detail: {
             VStack(spacing: 0) {
                 if !store.ghosttyInstalled && !installBannerDismissed {
@@ -28,6 +29,11 @@ struct ContentView: View {
             }
         }
         .navigationSplitViewStyle(.balanced)
+        .searchable(
+            text: $searchText,
+            placement: .sidebar,
+            prompt: "Search"
+        )
         .frame(
             minWidth: 715, idealWidth: 715, maxWidth: 715,
             minHeight: 480, idealHeight: 600
