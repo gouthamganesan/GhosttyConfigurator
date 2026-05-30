@@ -138,7 +138,7 @@ final class ConfigStore {
         // General
         let autoUpdate: AutoUpdateMode = .check
         let autoUpdateChannel: AutoUpdateChannel = .stable
-        let confirmCloseSurface: Bool = true
+        let confirmCloseSurface: ConfirmCloseSurface = .whenBusy
         let quitAfterLastWindowClosed: Bool = false
         let desktopNotifications: Bool = true
         let bellAudioVolume: Double = 0.5
@@ -471,7 +471,12 @@ final class ConfigStore {
     }
 
     var windowDecoration: WindowDecoration {
-        get { file.enumValue(WindowDecoration.self, for: "window-decoration", default: defaults.windowDecoration) }
+        get {
+            guard let raw = file.scalarValue(for: "window-decoration") else {
+                return defaults.windowDecoration
+            }
+            return WindowDecoration(rawString: raw) ?? defaults.windowDecoration
+        }
         set { setEnum("window-decoration", newValue, label: "Change Window Decoration") }
     }
 
@@ -970,9 +975,23 @@ final class ConfigStore {
         set { setEnum("auto-update-channel", newValue, label: "Change Update Channel") }
     }
 
-    var confirmCloseSurface: Bool {
-        get { file.bool(for: "confirm-close-surface", default: defaults.confirmCloseSurface) }
-        set { setBool("confirm-close-surface", newValue, label: "Toggle Confirm Close") }
+    /// `confirm-close-surface` — three states. Default (`true`) is omitted
+    /// from disk so the file stays clean; explicit `false` / `always` are
+    /// written.
+    var confirmCloseSurface: ConfirmCloseSurface {
+        get {
+            guard let raw = file.scalarValue(for: "confirm-close-surface"), !raw.isEmpty else {
+                return .whenBusy
+            }
+            return ConfirmCloseSurface(rawValue: raw) ?? .whenBusy
+        }
+        set {
+            if newValue == .whenBusy {
+                deleteKey("confirm-close-surface", label: "Reset Confirm Close")
+            } else {
+                setScalar("confirm-close-surface", value: newValue.rawValue, label: "Change Confirm Close")
+            }
+        }
     }
 
     var quitAfterLastWindowClosed: Bool {

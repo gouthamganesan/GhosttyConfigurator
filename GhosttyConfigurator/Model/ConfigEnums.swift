@@ -24,6 +24,8 @@ enum BoldColorMode: String, CaseIterable, Identifiable, Hashable {
 
 enum BlurLevel: String, CaseIterable, Identifiable, Hashable {
     case off, subtle, medium, strong
+    case glassRegular = "macos-glass-regular"
+    case glassClear = "macos-glass-clear"
 
     var id: String {
         rawValue
@@ -35,17 +37,23 @@ enum BlurLevel: String, CaseIterable, Identifiable, Hashable {
         case .subtle: "Subtle"
         case .medium: "Medium"
         case .strong: "Strong"
+        case .glassRegular: "macOS glass (regular)"
+        case .glassClear: "macOS glass (clear)"
         }
     }
 
-    /// Ghostty's `background-blur` accepts `false`, `true`, or a radius int.
-    /// We map our four-step UX to representative radii.
+    /// Ghostty's `background-blur` accepts `false`, `true`, a radius int, or
+    /// (on macOS 26+) the literal `macos-glass-regular` / `macos-glass-clear`.
+    /// Our four numeric buckets map to representative radii; the glass values
+    /// pass through verbatim.
     var configValue: String {
         switch self {
         case .off: "false"
         case .subtle: "10"
         case .medium: "20"
         case .strong: "40"
+        case .glassRegular: "macos-glass-regular"
+        case .glassClear: "macos-glass-clear"
         }
     }
 
@@ -53,6 +61,8 @@ enum BlurLevel: String, CaseIterable, Identifiable, Hashable {
         switch rawString {
         case "false", "0": self = .off
         case "true": self = .medium
+        case "macos-glass-regular": self = .glassRegular
+        case "macos-glass-clear": self = .glassClear
         default:
             guard let n = Int(rawString) else { return nil }
             switch n {
@@ -69,6 +79,7 @@ enum BlurLevel: String, CaseIterable, Identifiable, Hashable {
 
 enum CursorStyle: String, CaseIterable, Identifiable, Hashable {
     case block, bar, underline
+    case blockHollow = "block_hollow"
 
     var id: String {
         rawValue
@@ -79,6 +90,7 @@ enum CursorStyle: String, CaseIterable, Identifiable, Hashable {
         case .block: "Block"
         case .bar: "Bar"
         case .underline: "Underline"
+        case .blockHollow: "Block (hollow)"
         }
     }
 }
@@ -187,7 +199,10 @@ enum MacosWindowButtons: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
-/// `window-decoration` — controls window chrome rendering.
+/// `window-decoration` — controls window chrome rendering. Ghostty also
+/// accepts the legacy boolean values `true` (→ auto) and `false` (→ none).
+/// We never write those forms, but `init(rawString:)` lets us read configs
+/// that do.
 enum WindowDecoration: String, CaseIterable, Identifiable, Hashable {
     case auto, none, server, client
 
@@ -201,6 +216,16 @@ enum WindowDecoration: String, CaseIterable, Identifiable, Hashable {
         case .none: "None"
         case .server: "Server-side"
         case .client: "Client-side"
+        }
+    }
+
+    init?(rawString: String) {
+        switch rawString.lowercased() {
+        case "true": self = .auto
+        case "false": self = .none
+        default:
+            guard let value = WindowDecoration(rawValue: rawString) else { return nil }
+            self = value
         }
     }
 }
@@ -435,7 +460,7 @@ enum MouseShiftCapture: String, CaseIterable, Identifiable, Hashable {
 // MARK: - Shell
 
 enum ShellIntegration: String, CaseIterable, Identifiable, Hashable {
-    case detect, none, bash, zsh, fish, elvish
+    case detect, none, bash, zsh, fish, elvish, nushell
 
     var id: String {
         rawValue
@@ -450,6 +475,7 @@ enum ShellIntegration: String, CaseIterable, Identifiable, Hashable {
         case .zsh: "zsh"
         case .fish: "fish"
         case .elvish: "elvish"
+        case .nushell: "nushell"
         }
     }
 
@@ -461,6 +487,7 @@ enum ShellIntegration: String, CaseIterable, Identifiable, Hashable {
         case "zsh": self = .zsh
         case "fish": self = .fish
         case "elvish": self = .elvish
+        case "nushell", "nu": self = .nushell
         default: return nil
         }
     }
@@ -473,6 +500,7 @@ enum ShellIntegration: String, CaseIterable, Identifiable, Hashable {
         case .zsh: "Zsh"
         case .fish: "Fish"
         case .elvish: "Elvish"
+        case .nushell: "Nushell"
         }
     }
 }
@@ -519,6 +547,28 @@ enum Scrollbar: String, CaseIterable, Identifiable, Hashable {
 }
 
 // MARK: - General
+
+/// `confirm-close-surface` — tri-state, NOT a Bool. `true` (default) prompts
+/// when shell integration believes a process is running; `false` skips all
+/// prompts; `always` confirms unconditionally. We treat `true` as the default,
+/// so picking it deletes the key.
+enum ConfirmCloseSurface: String, CaseIterable, Identifiable, Hashable {
+    case whenBusy = "true"
+    case never = "false"
+    case always
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .whenBusy: "When a process is running (default)"
+        case .never: "Never confirm"
+        case .always: "Always confirm"
+        }
+    }
+}
 
 enum AutoUpdateMode: String, CaseIterable, Identifiable, Hashable {
     case off, check, download

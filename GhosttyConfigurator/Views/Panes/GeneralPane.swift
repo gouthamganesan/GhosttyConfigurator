@@ -41,7 +41,12 @@ struct GeneralPane: View {
             }
 
             Section {
-                Toggle(isOn: $store.confirmCloseSurface) {
+                LabeledContent {
+                    Picker("", selection: $store.confirmCloseSurface) {
+                        ForEach(ConfirmCloseSurface.allCases) { Text($0.label).tag($0) }
+                    }
+                    .labelsHidden().pickerStyle(.menu).fixedSize()
+                } label: {
                     rowLabel(
                         "Confirm before closing",
                         modified: store.isModified(
