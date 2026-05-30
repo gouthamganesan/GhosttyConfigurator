@@ -88,4 +88,35 @@ final class KeybindParserTests: XCTestCase {
         XCTAssertEqual(KeyDisplay.label(for: "c"), "c")
         XCTAssertFalse(KeyDisplay.isWord("c"))
     }
+
+    // MARK: - ControlSequenceFormatter
+
+    func testControlFormatterMapsCtrlBytes() {
+        // Ghostty's three default text bindings: \x01 (Ctrl-A, start-of-line),
+        // \x05 (Ctrl-E, end-of-line), \x15 (Ctrl-U, kill-line-back).
+        XCTAssertEqual(ControlSequenceFormatter.humanize(#"\x01"#), "Ctrl-A")
+        XCTAssertEqual(ControlSequenceFormatter.humanize(#"\x05"#), "Ctrl-E")
+        XCTAssertEqual(ControlSequenceFormatter.humanize(#"\x15"#), "Ctrl-U")
+    }
+
+    func testControlFormatterHandlesEscAndDelete() {
+        XCTAssertEqual(ControlSequenceFormatter.humanize(#"\x1b"#), "Esc")
+        XCTAssertEqual(ControlSequenceFormatter.humanize(#"\x7f"#), "Delete")
+    }
+
+    func testControlFormatterLeavesNonHexAlone() {
+        XCTAssertEqual(ControlSequenceFormatter.humanize("hello world"), "hello world")
+        XCTAssertEqual(
+            ControlSequenceFormatter.humanize(#"\x"#),
+            #"\x"#,
+            "Bare \\x with no hex digits should pass through."
+        )
+    }
+
+    func testControlFormatterInlineMix() {
+        XCTAssertEqual(
+            ControlSequenceFormatter.humanize(#"prefix \x05 suffix"#),
+            "prefix Ctrl-E suffix"
+        )
+    }
 }

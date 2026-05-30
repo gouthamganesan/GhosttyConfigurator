@@ -16,10 +16,18 @@ struct ThemeBrowserView: View {
     @State private var themes: [Theme] = []
     @State private var isLoading: Bool = true
     @State private var search: String = ""
-    @State private var filter: ThemeFilter = .all
+    @State private var filter: ThemeFilter
     @State private var selectedName: String?
     @State private var importError: String?
     @State private var showImportError: Bool = false
+
+    init(mode: ThemeBrowserMode) {
+        self.mode = mode
+        // Pre-narrow the filter to match what the user is picking: opening the
+        // dark-pair slot shouldn't dump 200 light themes on them. Single-mode
+        // (match-system off) keeps the unfiltered list per the user's spec.
+        _filter = State(initialValue: ThemeFilter.initial(for: mode))
+    }
 
     private var filtered: [Theme] {
         themes
@@ -276,6 +284,16 @@ enum ThemeFilter: String, CaseIterable, Identifiable {
         case .dark: theme.isDark
         case .bundled: theme.source == .bundled
         case .user: theme.source == .user
+        }
+    }
+
+    /// Default filter for a given browser mode. Pair-mode pre-filters to the
+    /// matching appearance; single mode (match-system off) shows everything.
+    static func initial(for mode: ThemeBrowserMode) -> ThemeFilter {
+        switch mode {
+        case .single: .all
+        case .lightPair: .light
+        case .darkPair: .dark
         }
     }
 }

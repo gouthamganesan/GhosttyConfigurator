@@ -195,13 +195,17 @@ private struct KeybindRow: View {
     }
 
     /// `text:` / `csi:` / `esc:` actions carry config-syntax-escaped payloads
-    /// (`\\x05` for the Ctrl-E byte, `\\033` for ESC, etc.). Ghostty's
-    /// `+list-keybinds --default` prints them verbatim, so the user sees
-    /// `\\x05` which reads as a typo. Collapse `\\` → `\` for display.
+    /// (`\\x05` for the Ctrl-E byte, `\\033` for ESC, etc.). For display we:
+    ///   1. Collapse `\\` → `\` (Ghostty prints config-syntax form).
+    ///   2. Substitute `\xNN` hex escapes with the friendly Ctrl-key name
+    ///      (`\x05` → `Ctrl-E`) — the raw hex was the original complaint;
+    ///      knowing "Ctrl-E" is meaningful to a terminal user, "\x05" is not.
     private func displayParameter(_ param: String, verb: String) -> String {
         switch verb.lowercased() {
         case "text", "csi", "esc":
-            param.replacingOccurrences(of: #"\\"#, with: #"\"#)
+            ControlSequenceFormatter.humanize(
+                param.replacingOccurrences(of: #"\\"#, with: #"\"#)
+            )
         default:
             param
         }
@@ -211,6 +215,54 @@ private struct KeybindRow: View {
         keybind.prefixes
             .sorted { $0.rawValue < $1.rawValue }
             .map { "\($0.rawValue):" }
+    }
+}
+
+/// Converts `\xNN` (and a few named escapes) inside text/csi/esc params into
+/// the `Ctrl-X` form a terminal user actually recognises. `\x05` is just hex
+/// noise; `Ctrl-E` (end-of-line) is the readline keystroke the binding is
+/// emulating.
+enum ControlSequenceFormatter {
+    static func humanize(_ raw: String) -> String {
+        // Greedy left-to-right scan: replace each `\xNN` with the Ctrl-glyph,
+        // collapse named escapes too. Anything we don't recognise passes
+        // through verbatim — better to show the raw form than guess wrong.
+        let pattern = #"\\x([0-9a-fA-F]{1,2})"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return raw }
+        let nsraw = raw as NSString
+        var result = ""
+        var cursor = 0
+        let matches = regex.matches(in: raw, range: NSRange(location: 0, length: nsraw.length))
+        for match in matches {
+            result += nsraw.substring(with: NSRange(location: cursor, length: match.range.location - cursor))
+            let hex = nsraw.substring(with: match.range(at: 1))
+            if let byte = UInt8(hex, radix: 16), let friendly = controlByteLabel(byte) {
+                result += friendly
+            } else {
+                result += nsraw.substring(with: match.range)
+            }
+            cursor = match.range.location + match.range.length
+        }
+        result += nsraw.substring(from: cursor)
+        return result
+    }
+
+    /// Map a control byte to a `Ctrl-X` (or named) label. Returns nil for
+    /// printable bytes — those round-trip as themselves anyway.
+    private static func controlByteLabel(_ byte: UInt8) -> String? {
+        switch byte {
+        case 0x00: "Ctrl-@"
+        case 0x01 ... 0x1A:
+            // 0x01 = Ctrl-A, … 0x1A = Ctrl-Z
+            "Ctrl-\(Character(UnicodeScalar(byte + 0x40)))"
+        case 0x1B: "Esc"
+        case 0x1C: "Ctrl-\\"
+        case 0x1D: "Ctrl-]"
+        case 0x1E: "Ctrl-^"
+        case 0x1F: "Ctrl-_"
+        case 0x7F: "Delete"
+        default: nil
+        }
     }
 }
 
@@ -267,31 +319,38 @@ enum KeyDisplay {
 // MARK: - Built-in (default) keybinds
 
 /// Read-only listing of Ghostty's built-in shortcuts, grouped by action
-/// category and collapsed into DisclosureGroups so they don't dominate the
-/// pane. Surfaces what the user is overriding when they add a custom row.
+/// category. Each category is collapsible via a manual Button-driven row
+/// instead of SwiftUI's DisclosureGroup — we hit two problems with the
+/// platform control inside `Form { .grouped }`:
+///   1. Only the chevron registered taps; the rest of the row didn't.
+///   2. The Clipboard group specifically refused to expand at all, likely
+///      a focus/identity bug with the implicit isExpanded state.
+/// Driving expansion off our own `@State Set` of categories side-steps both.
 private struct DefaultKeybindsSection: View {
     let keybinds: [Keybind]
+
+    @State private var expanded: Set<ActionLabels.Category> = []
 
     var body: some View {
         Section {
             ForEach(groupedCategories, id: \.0) { category, items in
-                DisclosureGroup {
+                CategoryHeader(
+                    category: category,
+                    count: items.count,
+                    isExpanded: expanded.contains(category)
+                ) {
+                    if expanded.contains(category) {
+                        expanded.remove(category)
+                    } else {
+                        expanded.insert(category)
+                    }
+                }
+                if expanded.contains(category) {
                     ForEach(items) { keybind in
                         KeybindRow(keybind: keybind)
                             .padding(.vertical, 2)
+                            .padding(.leading, 18)
                     }
-                } label: {
-                    HStack {
-                        Text(category.label)
-                        Spacer()
-                        Text("\(items.count)")
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.tertiary)
-                    }
-                    // Without this, the Spacer's empty area doesn't register
-                    // taps — only the text glyphs do — so clicks on the
-                    // right-hand side of the row mysteriously do nothing.
-                    .contentShape(Rectangle())
                 }
             }
         } header: {
@@ -318,6 +377,35 @@ private struct DefaultKeybindsSection: View {
             guard let items = buckets[category], !items.isEmpty else { return nil }
             return (category, items)
         }
+    }
+}
+
+/// One collapsible category row. The entire row — chevron, title, count, and
+/// the Spacer-filled middle — is one Button, so taps anywhere toggle the
+/// group.
+private struct CategoryHeader: View {
+    let category: ActionLabels.Category
+    let count: Int
+    let isExpanded: Bool
+    let toggle: () -> Void
+
+    var body: some View {
+        Button(action: toggle) {
+            HStack(spacing: 8) {
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                    .animation(.snappy(duration: 0.18), value: isExpanded)
+                Text(category.label)
+                Spacer()
+                Text("\(count)")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.tertiary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
