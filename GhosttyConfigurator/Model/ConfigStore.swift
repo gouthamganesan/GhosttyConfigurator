@@ -40,6 +40,18 @@ final class ConfigStore {
         let backgroundOpacity: Double = 1.0
         let backgroundBlur: BlurLevel = .off
 
+        // Colors (defaults shown in the UI when no value is set yet; the
+        // actual Ghostty default comes from the active theme, which we
+        // don't resolve here — these only seed the ColorPicker swatch).
+        let backgroundColor: Color = .black
+        let foregroundColor: Color = .white
+        let cursorColorFallback: Color = .white
+        let selectionBackgroundFallback: Color = Color(red: 0.20, green: 0.40, blue: 0.85)
+        let selectionForegroundFallback: Color = .white
+        let boldColorMode: BoldColorMode = .none
+        let boldColorCustomFallback: Color = .white
+        let minimumContrast: Double = 1.0
+
         // Window
         let titlebarStyle: TitlebarStyle = .transparent
         let macosWindowButtons: MacosWindowButtons = .visible
@@ -237,6 +249,114 @@ final class ConfigStore {
             return BlurLevel(rawString: raw) ?? defaults.backgroundBlur
         }
         set { setScalar("background-blur", value: newValue.configValue, label: "Change Background Blur") }
+    }
+
+    // MARK: - Colors
+
+    /// `background` — always present semantically (theme provides a default).
+    /// When absent or unparseable, the UI falls back to `defaults.backgroundColor`.
+    var backgroundColor: Color {
+        get { file.color(for: "background") ?? defaults.backgroundColor }
+        set { setScalar("background", value: ColorParsing.hexString(from: newValue), label: "Change Background Color") }
+    }
+
+    var isBackgroundColorModified: Bool { file.scalarValue(for: "background") != nil }
+
+    var foregroundColor: Color {
+        get { file.color(for: "foreground") ?? defaults.foregroundColor }
+        set { setScalar("foreground", value: ColorParsing.hexString(from: newValue), label: "Change Foreground Color") }
+    }
+
+    var isForegroundColorModified: Bool { file.scalarValue(for: "foreground") != nil }
+
+    /// `cursor-color`, `selection-background`, `selection-foreground` —
+    /// keys that follow the theme when absent. Use `isAuto*` to drive the
+    /// per-row "Auto" toggle in the UI.
+    var cursorColor: Color {
+        get { file.color(for: "cursor-color") ?? defaults.cursorColorFallback }
+        set { setScalar("cursor-color", value: ColorParsing.hexString(from: newValue), label: "Change Cursor Color") }
+    }
+
+    var isCursorColorAuto: Bool {
+        get { file.scalarValue(for: "cursor-color") == nil }
+        set {
+            if newValue {
+                deleteKey("cursor-color", label: "Reset Cursor Color")
+            } else {
+                setScalar("cursor-color",
+                          value: ColorParsing.hexString(from: defaults.cursorColorFallback),
+                          label: "Set Cursor Color")
+            }
+        }
+    }
+
+    var selectionBackgroundColor: Color {
+        get { file.color(for: "selection-background") ?? defaults.selectionBackgroundFallback }
+        set { setScalar("selection-background", value: ColorParsing.hexString(from: newValue), label: "Change Selection Background") }
+    }
+
+    var isSelectionBackgroundAuto: Bool {
+        get { file.scalarValue(for: "selection-background") == nil }
+        set {
+            if newValue {
+                deleteKey("selection-background", label: "Reset Selection Background")
+            } else {
+                setScalar("selection-background",
+                          value: ColorParsing.hexString(from: defaults.selectionBackgroundFallback),
+                          label: "Set Selection Background")
+            }
+        }
+    }
+
+    var selectionForegroundColor: Color {
+        get { file.color(for: "selection-foreground") ?? defaults.selectionForegroundFallback }
+        set { setScalar("selection-foreground", value: ColorParsing.hexString(from: newValue), label: "Change Selection Foreground") }
+    }
+
+    var isSelectionForegroundAuto: Bool {
+        get { file.scalarValue(for: "selection-foreground") == nil }
+        set {
+            if newValue {
+                deleteKey("selection-foreground", label: "Reset Selection Foreground")
+            } else {
+                setScalar("selection-foreground",
+                          value: ColorParsing.hexString(from: defaults.selectionForegroundFallback),
+                          label: "Set Selection Foreground")
+            }
+        }
+    }
+
+    /// `bold-color` — three-mode picker: default (absent), use the bright ANSI
+    /// variant, or a literal hex. The custom hex round-trips via `boldColorCustom`.
+    var boldColorMode: BoldColorMode {
+        get { file.boldColorMode() }
+        set {
+            switch newValue {
+            case .none:
+                deleteKey("bold-color", label: "Reset Bold Color")
+            case .bright:
+                setScalar("bold-color", value: "bright", label: "Use Bright Bold Color")
+            case .custom:
+                // Only seed a default hex if there isn't already one — preserves
+                // the last-chosen custom color when toggling away and back.
+                if file.color(for: "bold-color") == nil {
+                    setScalar("bold-color",
+                              value: ColorParsing.hexString(from: defaults.boldColorCustomFallback),
+                              label: "Use Custom Bold Color")
+                }
+            }
+        }
+    }
+
+    var boldColorCustom: Color {
+        get { file.color(for: "bold-color") ?? defaults.boldColorCustomFallback }
+        set { setScalar("bold-color", value: ColorParsing.hexString(from: newValue), label: "Change Bold Color") }
+    }
+
+    /// `minimum-contrast` — float in [1.0, 21.0]. 1.0 = no enforcement.
+    var minimumContrast: Double {
+        get { file.double(for: "minimum-contrast", default: defaults.minimumContrast) }
+        set { setDouble("minimum-contrast", newValue, label: "Change Minimum Contrast") }
     }
 
     // MARK: - Window

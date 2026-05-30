@@ -63,6 +63,16 @@ enum Validator {
             )
         }
 
+        // MARK: minimum-contrast — Ghostty clamps to [1.0, 21.0]. Flag anything outside.
+        if let raw = file.scalarValue(for: "minimum-contrast"),
+           let value = Double(raw),
+           value < 1.0 || value > 21.0 {
+            issues["minimum-contrast"] = .init(
+                severity: .warning,
+                message: "Minimum contrast must be between 1.0 and 21.0. Ghostty will clamp out-of-range values."
+            )
+        }
+
         // MARK: command — if the value contains a path, check the file exists.
         if let cmd = file.scalarValue(for: "command"),
            !cmd.isEmpty,

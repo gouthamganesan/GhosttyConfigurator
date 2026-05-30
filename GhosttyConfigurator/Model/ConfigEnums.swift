@@ -2,6 +2,24 @@ import SwiftUI
 
 // MARK: - Appearance
 
+/// `bold-color` — accepts a hex color, the literal `bright` (use the bright
+/// ANSI variant of the foreground color), or omission (no bolding tweak).
+/// We split mode from the custom hex so the UI can disclose a ColorPicker
+/// only when `.custom` is selected.
+enum BoldColorMode: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case none, bright, custom
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .none:   "Default"
+        case .bright: "Bright variant"
+        case .custom: "Custom color"
+        }
+    }
+}
+
 enum BlurLevel: String, CaseIterable, Identifiable, Hashable, Sendable {
     case off, subtle, medium, strong
 

@@ -1,10 +1,13 @@
 import SwiftUI
+import AppKit
 
-/// Parse Ghostty's color literal forms into a SwiftUI `Color`.
+/// Parse Ghostty's color literal forms into a SwiftUI `Color`, and serialize
+/// a SwiftUI `Color` back into the canonical `#RRGGBB` form Ghostty writes.
 ///
-/// Ghostty accepts:
+/// Ghostty accepts on read:
 ///   `#RRGGBB`, `RRGGBB`, `#RGB`, `RGB`
 /// — case-insensitive, optional `#`. No named colors in the theme format.
+/// We always write `#RRGGBB` to keep diffs minimal.
 enum ColorParsing {
     /// Parse a hex color string. Returns nil if the input doesn't conform —
     /// callers should fall back to a default rather than crash.
@@ -45,5 +48,18 @@ enum ColorParsing {
         guard let (r, g, b) = rgbComponents(from: raw) else { return nil }
         let luma = (0.299 * Double(r) + 0.587 * Double(g) + 0.114 * Double(b)) / 255.0
         return luma < 0.5
+    }
+
+    /// Serialize a SwiftUI `Color` as `#RRGGBB` (sRGB, 8-bit). Drops alpha —
+    /// Ghostty's color keys don't carry it (use `background-opacity` instead).
+    static func hexString(from color: Color) -> String {
+        let ns = NSColor(color).usingColorSpace(.sRGB) ?? .black
+        let r = Int(round(ns.redComponent * 255))
+        let g = Int(round(ns.greenComponent * 255))
+        let b = Int(round(ns.blueComponent * 255))
+        return String(format: "#%02X%02X%02X",
+                      max(0, min(255, r)),
+                      max(0, min(255, g)),
+                      max(0, min(255, b)))
     }
 }

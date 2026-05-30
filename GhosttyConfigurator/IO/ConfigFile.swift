@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// Value type wrapping a parsed config file with editing operations that
 /// preserve comments, blank lines, and ordering of unrelated entries.
@@ -212,6 +213,24 @@ struct ConfigFile: Hashable, Sendable {
             return defaultValue
         }
         return value
+    }
+
+    /// Parse the last value for `key` as a SwiftUI `Color`. Returns `nil` if
+    /// the key is absent or the value doesn't parse as `#RRGGBB`/`#RGB`.
+    func color(for key: String) -> Color? {
+        guard let raw = scalarValue(for: key) else { return nil }
+        return ColorParsing.color(from: raw)
+    }
+
+    /// Derive the `bold-color` tri-state from the raw config value. Pure —
+    /// no I/O, so tests can exercise it directly without a `ConfigStore`.
+    func boldColorMode() -> BoldColorMode {
+        guard let raw = scalarValue(for: "bold-color"), !raw.isEmpty else {
+            return .none
+        }
+        if raw.lowercased() == "bright" { return .bright }
+        if ColorParsing.color(from: raw) != nil { return .custom }
+        return .none
     }
 
     // MARK: - Font-feature flag list
