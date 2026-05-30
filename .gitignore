@@ -21,6 +21,10 @@ DerivedData/
 # Convenience copy of the freshly-built .app placed at the project root
 # after each working pass (see CLAUDE.md workflow rule).
 /GhosttyConfigurator.app/
+
+# Claude Code planning artifacts (gap-fix plan, enhancement backlog, etc.)
+# — local-only; not pushed to the public repo.
+.claude/
 *.hmap
 *.ipa
 *.dSYM.zip
