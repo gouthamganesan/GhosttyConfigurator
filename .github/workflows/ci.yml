@@ -23,8 +23,16 @@ jobs:
         run: sudo xcode-select -s "/Applications/Xcode_${XCODE_VERSION}.app/Contents/Developer"
 
       - name: Install XcodeGen + SwiftLint + SwiftFormat
+        # `brew update` pulls newer formulae than the runner image's cache —
+        # in particular SwiftLint 0.63.3+ fixed false-positive
+        # `force_unwrapping` flags on plain boolean negations
+        # (`!foo.isEmpty`). Without the update step CI uses 0.63.2 and
+        # fails locally-passing code.
         run: |
+          brew update
           brew install xcodegen swiftlint swiftformat
+          swiftlint version
+          swiftformat --version
 
       - name: Generate Xcode project
         run: xcodegen generate
