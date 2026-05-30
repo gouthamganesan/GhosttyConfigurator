@@ -56,7 +56,11 @@ jobs:
             build | xcbeautify --renderer github-actions
 
       - name: Build (Release)
+        # `set -o pipefail` so a real xcodebuild failure isn't masked by
+        # xcbeautify always exiting 0. Also pin -derivedDataPath so the
+        # bundle-size gate knows where to look.
         run: |
+          set -o pipefail
           xcodebuild \
             -project GhosttyConfigurator.xcodeproj \
             -scheme GhosttyConfigurator \
@@ -67,6 +71,8 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             build | xcbeautify --renderer github-actions
+          echo "--- post-build directory listing ---"
+          ls -la build/Build/Products/Release/ || ls -la build/ || true
 
       - name: Bundle-size gate (Release < 8 MB)
         run: |
