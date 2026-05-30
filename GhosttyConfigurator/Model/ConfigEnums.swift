@@ -701,6 +701,29 @@ enum QuickTerminalSpaceBehavior: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+// MARK: - Advanced (A3c)
+
+/// `custom-shader-animation` — tri-state. `true` runs only on focused
+/// surface, `false` only redraws on terminal updates (no animation),
+/// `always` runs everywhere (heavier).
+enum CustomShaderAnimation: String, CaseIterable, Identifiable, Hashable {
+    case enabled = "true"
+    case disabled = "false"
+    case always
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .enabled: "On focused surface (default)"
+        case .disabled: "Off (only repaint on update)"
+        case .always: "Always (highest CPU)"
+        }
+    }
+}
+
 /// `notify-on-command-finish` — when to send command-finished notifications.
 enum NotifyOnCommandFinish: String, CaseIterable, Identifiable, Hashable {
     case never, unfocused, always

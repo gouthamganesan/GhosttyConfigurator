@@ -18,6 +18,9 @@ struct AdvancedPane: View {
         return Form {
             profilesSection
             quickTerminalSection(store: store)
+            customShaderSection(store: store)
+            splitsSection(store: store)
+            linksSection(store: store)
             actionsSection
         }
         .formStyle(.grouped)
@@ -137,6 +140,137 @@ struct AdvancedPane: View {
         } footer: {
             Text(
                 "The quick terminal is a slide-out drop-down. It needs a hotkey — bind `toggle_quick_terminal` in **Keyboard → Add Shortcut**; there's no default binding."
+            )
+        }
+    }
+
+    private func customShaderSection(store: ConfigStore) -> some View {
+        @Bindable var store = store
+        return Section {
+            LabeledContent {
+                HStack(spacing: 8) {
+                    Text(store.customShaderPath.isEmpty
+                        ? "None"
+                        : (store.customShaderPath as NSString).lastPathComponent)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .frame(maxWidth: 220, alignment: .trailing)
+                    Button("Choose…") { pickShader() }
+                    if !store.customShaderPath.isEmpty {
+                        Button {
+                            store.customShaderPath = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.tertiary)
+                        }
+                        .buttonStyle(.borderless)
+                        .help("Clear the shader path")
+                    }
+                }
+            } label: {
+                rowLabel(
+                    "Shader file",
+                    modified: !store.customShaderPath.isEmpty,
+                    docKey: "custom-shader"
+                )
+            }
+
+            if !store.customShaderPath.isEmpty {
+                LabeledContent {
+                    Picker("", selection: $store.customShaderAnimation) {
+                        ForEach(CustomShaderAnimation.allCases) { Text($0.label).tag($0) }
+                    }
+                    .labelsHidden().pickerStyle(.menu).fixedSize()
+                } label: {
+                    rowLabel(
+                        "Animation",
+                        modified: store.customShaderAnimation != .enabled,
+                        docKey: "custom-shader-animation"
+                    )
+                }
+            }
+        } header: {
+            Text("Custom shaders")
+        } footer: {
+            Text(
+                "Ghostty runs Shadertoy-compatible GLSL shaders after the default render pipeline. A bad shader can paint the window black; clear the path here to recover."
+            )
+        }
+    }
+
+    private func splitsSection(store: ConfigStore) -> some View {
+        @Bindable var store = store
+        return Section {
+            LabeledContent {
+                SystemSettingsSlider(
+                    value: $store.unfocusedSplitOpacity,
+                    range: 0.15 ... 1.0,
+                    leadingLabel: "Faint",
+                    trailingLabel: "Solid"
+                )
+                .frame(width: 240)
+            } label: {
+                rowLabel(
+                    "Unfocused split opacity",
+                    modified: store.unfocusedSplitOpacity != 0.7,
+                    docKey: "unfocused-split-opacity"
+                )
+            }
+
+            LabeledContent {
+                HStack(spacing: 8) {
+                    ColorPicker("", selection: $store.unfocusedSplitFill, supportsOpacity: false)
+                        .labelsHidden()
+                    Toggle("Auto", isOn: $store.isUnfocusedSplitFillAuto)
+                        .toggleStyle(.checkbox)
+                }
+            } label: {
+                rowLabel(
+                    "Dim colour",
+                    modified: !store.isUnfocusedSplitFillAuto,
+                    docKey: "unfocused-split-fill"
+                )
+            }
+
+            LabeledContent {
+                HStack(spacing: 8) {
+                    ColorPicker("", selection: $store.splitDividerColor, supportsOpacity: false)
+                        .labelsHidden()
+                    Toggle("Auto", isOn: $store.isSplitDividerColorAuto)
+                        .toggleStyle(.checkbox)
+                }
+            } label: {
+                rowLabel(
+                    "Divider colour",
+                    modified: !store.isSplitDividerColorAuto,
+                    docKey: "split-divider-color"
+                )
+            }
+        } header: {
+            Text("Splits")
+        } footer: {
+            Text(
+                "**Dim colour** is the tint laid over inactive splits. **Auto** uses the background colour, which is usually what you want."
+            )
+        }
+    }
+
+    private func linksSection(store: ConfigStore) -> some View {
+        @Bindable var store = store
+        return Section {
+            Toggle(isOn: $store.linkUrl) {
+                rowLabel(
+                    "Detect URLs and make them clickable",
+                    modified: !store.linkUrl,
+                    docKey: "link-url"
+                )
+            }
+        } header: {
+            Text("Links")
+        } footer: {
+            Text(
+                "Cmd-click (Ctrl-click on Linux) opens detected URLs in your default browser. Custom regex link rules (`link =`) are editable in the config file directly."
             )
         }
     }
@@ -296,6 +430,16 @@ struct AdvancedPane: View {
     }
 
     // MARK: - Actions
+
+    private func pickShader() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.message = "Choose a GLSL shader file"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        store.customShaderPath = url.path
+    }
 
     private func pickExistingProfile() {
         let panel = NSOpenPanel()
