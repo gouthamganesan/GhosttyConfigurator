@@ -4,8 +4,8 @@ import SwiftUI
 enum Tokens {
     // MARK: - Brand
 
-    /// Brand accent (the cyan from the logo). Resolved from the asset catalog;
-    /// keep the `Color("AccentColor")` reference here so accidental Color.accentColor
-    /// usage in views still produces the right shade.
+    /// Brand accent — `#0891B2` (deep cyan/teal). Resolved from the asset
+    /// catalog; keep the `Color.accentColor` reference here so accidental
+    /// `Color.accentColor` usage in views still produces the right shade.
     static let brandAccent = Color.accentColor
 }
