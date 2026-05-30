@@ -96,6 +96,28 @@ enum CursorStyleBlink: String, CaseIterable, Identifiable, Hashable, Sendable {
     }
 }
 
+/// Numerals figure style. Maps to four mutually-exclusive OpenType features
+/// (`+tnum` / `+pnum` / `+onum` / `+lnum`); writing one clears the others.
+enum FontNumerals: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case `default`
+    case tabular = "tnum"
+    case proportional = "pnum"
+    case oldStyle = "onum"
+    case lining = "lnum"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .default:      "Default"
+        case .tabular:      "Tabular (equal width)"
+        case .proportional: "Proportional"
+        case .oldStyle:     "Old-style"
+        case .lining:       "Lining"
+        }
+    }
+}
+
 /// `cursor-text` — color of text under the cursor. Four modes mirror
 /// `bold-color`: default (key absent), match cell background, match cell
 /// foreground, or a literal hex.

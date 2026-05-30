@@ -81,10 +81,18 @@ final class ConfigStore {
 
         // Font
         let fontFamily: String = "JetBrains Mono"
+        let fontFamilyBold: String = ""
+        let fontFamilyItalic: String = ""
+        let fontFamilyBoldItalic: String = ""
         let fontSize: Double = 13
         let fontThicken: Bool = false
+        let fontThickenStrength: Int = 255
+        let fontSyntheticStyle: Bool = true
         let fontLigatures: Bool = true
         let fontContextualAlternates: Bool = true
+        let fontDiscretionaryLigatures: Bool = false
+        let fontHistoricalLigatures: Bool = false
+        let fontNumerals: FontNumerals = .default
 
         // Shell
         let shellIntegration: ShellIntegration = .detect
@@ -549,6 +557,72 @@ final class ConfigStore {
         set { setFontFeature("calt", sign: newValue, label: "Toggle Contextual Alternates") }
     }
 
+    var fontDiscretionaryLigatures: Bool {
+        get { file.fontFeatureSign(for: "dlig") ?? defaults.fontDiscretionaryLigatures }
+        set { setFontFeature("dlig", sign: newValue, label: "Toggle Discretionary Ligatures") }
+    }
+
+    var fontHistoricalLigatures: Bool {
+        get { file.fontFeatureSign(for: "hlig") ?? defaults.fontHistoricalLigatures }
+        set { setFontFeature("hlig", sign: newValue, label: "Toggle Historical Ligatures") }
+    }
+
+    /// Numerals figure style — exclusive picker mapping to tnum/pnum/onum/lnum.
+    var fontNumerals: FontNumerals {
+        get { file.fontNumerals() }
+        set { setFontNumerals(newValue, label: "Change Numerals Style") }
+    }
+
+    /// Bold / italic / bold-italic family overrides. Empty string = "same as
+    /// regular" (key absent). Reading collapses any blank/missing value into "".
+    var fontFamilyBold: String {
+        get { file.scalarValue(for: "font-family-bold") ?? defaults.fontFamilyBold }
+        set { setFontFamilyOverride("font-family-bold", value: newValue, label: "Change Bold Font") }
+    }
+
+    var fontFamilyItalic: String {
+        get { file.scalarValue(for: "font-family-italic") ?? defaults.fontFamilyItalic }
+        set { setFontFamilyOverride("font-family-italic", value: newValue, label: "Change Italic Font") }
+    }
+
+    var fontFamilyBoldItalic: String {
+        get { file.scalarValue(for: "font-family-bold-italic") ?? defaults.fontFamilyBoldItalic }
+        set { setFontFamilyOverride("font-family-bold-italic", value: newValue, label: "Change Bold-Italic Font") }
+    }
+
+    private func setFontFamilyOverride(_ key: String, value: String, label: String) {
+        if value.isEmpty {
+            deleteKey(key, label: label)
+        } else {
+            setScalar(key, value: value, label: label)
+        }
+    }
+
+    /// `font-thicken-strength` — integer 0–255, only meaningful when
+    /// `font-thicken` is on.
+    var fontThickenStrength: Int {
+        get { file.int(for: "font-thicken-strength", default: defaults.fontThickenStrength) }
+        set { setInt("font-thicken-strength", newValue, label: "Change Thicken Strength") }
+    }
+
+    /// `font-synthetic-style` — single boolean for "synthesize all missing
+    /// styles" (the gap-fix-plan opted for one toggle vs three). True = key
+    /// absent (Ghostty default = all three synthesized). False = empty value
+    /// (`font-synthetic-style =`), which disables all synthesis.
+    var fontSyntheticStyle: Bool {
+        get {
+            guard let raw = file.scalarValue(for: "font-synthetic-style") else { return true }
+            return !raw.isEmpty
+        }
+        set {
+            if newValue {
+                deleteKey("font-synthetic-style", label: "Enable Synthetic Styles")
+            } else {
+                setScalar("font-synthetic-style", value: "", label: "Disable Synthetic Styles")
+            }
+        }
+    }
+
     // MARK: - Shell
 
     var shellIntegration: ShellIntegration {
@@ -790,6 +864,22 @@ final class ConfigStore {
 
     private func setEnum<T: RawRepresentable>(_ key: String, _ value: T, label: String) where T.RawValue == String {
         setScalar(key, value: value.rawValue, label: label)
+    }
+
+    private func setFontNumerals(_ mode: FontNumerals, label: String) {
+        let priorValues = file.listValues(for: "font-feature")
+        undoManager?.registerUndo(withTarget: self) { store in
+            store.replaceFontFeatureList(priorValues, label: label)
+        }
+        undoManager?.setActionName(label)
+        file.setFontNumerals(mode)
+        schedulePersist()
+    }
+
+    private func replaceFontFeatureList(_ values: [String], label: String) {
+        undoManager?.setActionName(label)
+        file.setList("font-feature", values: values)
+        schedulePersist()
     }
 
     private func setFontFeature(_ tag: String, sign: Bool, label: String) {

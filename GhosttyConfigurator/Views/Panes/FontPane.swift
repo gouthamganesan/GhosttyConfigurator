@@ -8,34 +8,34 @@ struct FontPane: View {
 
         Form {
             Section {
-                LabeledContent {
-                    HStack(spacing: 6) {
-                        Text(store.fontFamily)
-                            .font(.system(size: 13, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        FontPickerButton(
-                            currentFamily: store.fontFamily,
-                            currentSize: store.fontSize
-                        ) { newFamily, newSize in
-                            store.fontFamily = newFamily
-                            // The font panel always returns a size — apply it
-                            // unless it matches the current value (no-op write).
-                            if newSize != store.fontSize {
-                                store.fontSize = newSize
-                            }
-                        }
-                    }
-                } label: {
-                    rowLabel("Family",
-                             modified: store.isModified(\.fontFamily, default: store.defaults.fontFamily),
-                             docKey: "font-family")
+                familyRow(title: "Regular",
+                          family: store.fontFamily,
+                          docKey: "font-family",
+                          isPrimary: true) { picked in
+                    store.fontFamily = picked
+                }
+                familyRow(title: "Bold",
+                          family: store.fontFamilyBold,
+                          docKey: "font-family-bold",
+                          isPrimary: false) { picked in
+                    store.fontFamilyBold = picked
+                }
+                familyRow(title: "Italic",
+                          family: store.fontFamilyItalic,
+                          docKey: "font-family-italic",
+                          isPrimary: false) { picked in
+                    store.fontFamilyItalic = picked
+                }
+                familyRow(title: "Bold italic",
+                          family: store.fontFamilyBoldItalic,
+                          docKey: "font-family-bold-italic",
+                          isPrimary: false) { picked in
+                    store.fontFamilyBoldItalic = picked
                 }
             } header: {
                 Text("Family")
             } footer: {
-                Text("Ghostty supports a fallback chain — repeat `font-family =` lines to add fallbacks. The Choose… button opens macOS's font panel; flip the panel's filter to \"Fixed Width\" to narrow it to terminal-friendly fonts.")
+                Text("Set Bold / Italic / Bold-italic to use different faces for each weight. Leave them empty to use the Regular family for all styles.")
             }
 
             Section {
@@ -50,8 +50,41 @@ struct FontPane: View {
                              modified: store.isModified(\.fontSize, default: store.defaults.fontSize),
                              docKey: "font-size")
                 }
+
+                Toggle(isOn: $store.fontSyntheticStyle) {
+                    rowLabel("Synthesize missing styles",
+                             modified: !store.fontSyntheticStyle,
+                             docKey: "font-synthetic-style")
+                }
+
+                Toggle(isOn: $store.fontThicken) {
+                    rowLabel("Thicken strokes",
+                             modified: store.isModified(\.fontThicken, default: store.defaults.fontThicken),
+                             docKey: "font-thicken")
+                }
+
+                if store.fontThicken {
+                    LabeledContent {
+                        SystemSettingsSlider(
+                            value: Binding(
+                                get: { Double(store.fontThickenStrength) },
+                                set: { store.fontThickenStrength = Int($0.rounded()) }
+                            ),
+                            range: 0...255,
+                            leadingLabel: "0",
+                            trailingLabel: "255"
+                        )
+                        .frame(width: 240)
+                    } label: {
+                        rowLabel("Thicken strength",
+                                 modified: store.isModified(\.fontThickenStrength, default: store.defaults.fontThickenStrength),
+                                 docKey: "font-thicken-strength")
+                    }
+                }
             } header: {
-                Text("Size")
+                Text("Size & Weight")
+            } footer: {
+                Text("**Synthesize missing styles** lets Ghostty fake bold/italic glyphs when the font lacks them. **Thicken** adds stroke weight (useful on non-Retina). Strength 0 = lightest, 255 = heaviest.")
             }
 
             Section {
@@ -67,20 +100,91 @@ struct FontPane: View {
                              docKey: "font-feature (+/-calt)")
                 }
 
-                Toggle(isOn: $store.fontThicken) {
-                    rowLabel("Thicken strokes",
-                             modified: store.isModified(\.fontThicken, default: store.defaults.fontThicken),
-                             docKey: "font-thicken")
+                Toggle(isOn: $store.fontDiscretionaryLigatures) {
+                    rowLabel("Discretionary ligatures",
+                             modified: store.fontDiscretionaryLigatures != store.defaults.fontDiscretionaryLigatures,
+                             docKey: "font-feature (+/-dlig)")
+                }
+
+                Toggle(isOn: $store.fontHistoricalLigatures) {
+                    rowLabel("Historical ligatures",
+                             modified: store.fontHistoricalLigatures != store.defaults.fontHistoricalLigatures,
+                             docKey: "font-feature (+/-hlig)")
+                }
+
+                LabeledContent {
+                    Picker("", selection: $store.fontNumerals) {
+                        ForEach(FontNumerals.allCases) { Text($0.label).tag($0) }
+                    }
+                    .labelsHidden().pickerStyle(.menu).fixedSize()
+                } label: {
+                    rowLabel("Numerals",
+                             modified: store.fontNumerals != store.defaults.fontNumerals,
+                             docKey: "font-feature (tnum/pnum/onum/lnum)")
                 }
             } header: {
-                Text("Features")
+                Text("OpenType Features")
             } footer: {
-                Text("Standard ligatures (`liga`) and contextual alternates (`calt`) are OpenType features. Thicken adds a subtle stroke weight — useful on non-Retina displays.")
+                Text("Liga/calt are widely supported. Dlig (e.g. `fi`→ﬁ rare ligatures) and hlig (`ct`→ﬅ historical forms) need a font that ships those alternates. Numerals: tabular = monospaced digits; old-style = mixed-ascender digits (1234567890).")
             }
         }
         .formStyle(.grouped)
         .paneToolbar(title: "Font",
                      subtitle: "Family, size, OpenType features.")
+    }
+
+    // MARK: - Rows
+
+    @ViewBuilder
+    private func familyRow(
+        title: String,
+        family: String,
+        docKey: String,
+        isPrimary: Bool,
+        onPick: @escaping (String) -> Void
+    ) -> some View {
+        LabeledContent {
+            HStack(spacing: 6) {
+                Text(displayLabel(for: family, isPrimary: isPrimary))
+                    .font(.system(size: 13, design: family.isEmpty && !isPrimary ? .default : .monospaced))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(maxWidth: 160, alignment: .trailing)
+                FontPickerButton(
+                    currentFamily: family.isEmpty ? store.fontFamily : family,
+                    currentSize: store.fontSize
+                ) { picked, size in
+                    onPick(picked)
+                    if isPrimary && size != store.fontSize {
+                        store.fontSize = size
+                    }
+                }
+                if !isPrimary && !family.isEmpty {
+                    Button {
+                        onPick("")
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.borderless)
+                    .help("Use the Regular family")
+                }
+            }
+        } label: {
+            rowLabel(title,
+                     modified: isPrimary
+                        ? family != store.defaults.fontFamily
+                        : !family.isEmpty,
+                     docKey: docKey)
+        }
+    }
+
+    private func displayLabel(for family: String, isPrimary: Bool) -> String {
+        if family.isEmpty {
+            return isPrimary ? "—" : "Same as Regular"
+        }
+        return family
     }
 
     private var formattedFontSize: String {

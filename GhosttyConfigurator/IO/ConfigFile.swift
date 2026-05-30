@@ -265,6 +265,44 @@ struct ConfigFile: Hashable, Sendable {
         return nil
     }
 
+    /// Derive the active numerals mode by inspecting tnum/pnum/onum/lnum.
+    /// If multiple are set (which would be unusual), the *last-write-wins*
+    /// scan picks the one nearest the end of the file.
+    func fontNumerals() -> FontNumerals {
+        var winner: FontNumerals = .default
+        for value in listValues(for: "font-feature") {
+            let trimmed = value.trimmingCharacters(in: .whitespaces)
+            guard trimmed.first == "+", trimmed.count >= 2 else { continue }
+            let tag = String(trimmed.dropFirst()).lowercased()
+            if let mode = FontNumerals(rawValue: tag), mode != .default {
+                winner = mode
+            }
+        }
+        return winner
+    }
+
+    /// Switch to a numerals mode. Removes the other three tnum/pnum/onum/lnum
+    /// `+tag` entries first to keep them mutually exclusive.
+    @discardableResult
+    mutating func setFontNumerals(_ mode: FontNumerals) -> Bool {
+        let tags: Set<String> = ["tnum", "pnum", "onum", "lnum"]
+        var values = listValues(for: "font-feature").filter { value in
+            let trimmed = value.trimmingCharacters(in: .whitespaces)
+            guard trimmed.count >= 2 else { return true }
+            let prefix = trimmed.first
+            let tag = String(trimmed.dropFirst()).lowercased()
+            // Drop any +tag / -tag matching the numerals set.
+            if (prefix == "+" || prefix == "-"), tags.contains(tag) {
+                return false
+            }
+            return true
+        }
+        if mode != .default {
+            values.append("+\(mode.rawValue)")
+        }
+        return setList("font-feature", values: values)
+    }
+
     /// Set a single font feature to `+tag` or `-tag`. Preserves other features.
     /// Pass `nil` to remove the tag entirely (Ghostty falls back to font default).
     @discardableResult
