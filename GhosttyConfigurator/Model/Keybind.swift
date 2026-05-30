@@ -143,10 +143,13 @@ enum KeybindParser {
     /// Parse a `keybind = …` value into a structured Keybind. Returns nil for
     /// malformed strings (Ghostty would silently ignore them too).
     static func parse(_ value: String) -> Keybind? {
-        // Ghostty splits the keybind value on the FIRST `=` — but the value
-        // we receive here is already the post-`=` portion. We need to split
-        // again on the first `=` inside (which separates trigger from action).
-        guard let eq = value.firstIndex(of: "=") else { return nil }
+        // The string is `trigger=action`. A naive split on the first `=` breaks
+        // triggers that include the `=` key itself (Ghostty's documented form
+        // `super+==increase_font_size:1` for ⌘=, `super++=…` for ⌘+, etc.).
+        // Action verbs are snake_case identifiers (lowercase ASCII letter or
+        // `_`), so we walk left-to-right and accept the first `=` whose right
+        // side opens with one of those characters.
+        guard let eq = actionSeparatorIndex(in: value) else { return nil }
 
         let triggerRaw = String(value[..<eq]).trimmingCharacters(in: .whitespaces)
         let actionRaw = String(value[value.index(after: eq)...]).trimmingCharacters(in: .whitespaces)
@@ -191,6 +194,25 @@ enum KeybindParser {
             rawTrigger: working,
             action: KeybindAction(parsing: actionRaw)
         )
+    }
+
+    /// Walk the string looking for the `=` that introduces the action verb.
+    /// Falls back to the first `=` if no candidate looks like an action verb —
+    /// matches the prior behaviour for malformed input.
+    private static func actionSeparatorIndex(in value: String) -> String.Index? {
+        var i = value.startIndex
+        while let eq = value[i...].firstIndex(of: "=") {
+            let next = value.index(after: eq)
+            if next < value.endIndex {
+                let c = value[next]
+                if c.isASCII, c.isLetter || c == "_" {
+                    return eq
+                }
+            }
+            i = next
+            if i >= value.endIndex { break }
+        }
+        return value.firstIndex(of: "=")
     }
 
     /// Serialize a Keybind back into the value Ghostty writes after `keybind = `.

@@ -24,9 +24,14 @@ struct KeyboardPane: View {
                     )
                 }
 
-                Toggle(isOn: $store.macosShortcuts) {
+                LabeledContent {
+                    Picker("", selection: $store.macosShortcuts) {
+                        ForEach(MacosShortcuts.allCases) { Text($0.label).tag($0) }
+                    }
+                    .labelsHidden().pickerStyle(.menu).fixedSize()
+                } label: {
                     rowLabel(
-                        "macOS menu shortcuts",
+                        "Shortcuts.app access",
                         modified: store.isModified(\.macosShortcuts, default: store.defaults.macosShortcuts),
                         docKey: "macos-shortcuts"
                     )
@@ -35,7 +40,7 @@ struct KeyboardPane: View {
                 Text("macOS modifiers")
             } footer: {
                 Text(
-                    "**Option as Alt** lets the Option key send Meta/Alt to terminal programs (Vim, Emacs, readline). Off keeps macOS's standard option-character behaviour (option-e → é). **Menu shortcuts** can be disabled if a custom binding collides with a menu item."
+                    "**Option as Alt** lets the Option key send Meta/Alt to terminal programs (Vim, Emacs, readline). Off keeps macOS's standard option-character behaviour (option-e → é). **Shortcuts.app access** governs whether macOS Shortcuts can drive Ghostty — a powerful but security-sensitive surface; default asks once per request."
                 )
             }
 
@@ -164,8 +169,8 @@ private struct KeybindRow: View {
                 ForEach(keybind.modifiers.sorted(by: { $0.sortOrder < $1.sortOrder })) { mod in
                     Text(mod.glyph)
                 }
-                Text(displayKey(keybind.key))
-                    .textCase(.uppercase)
+                Text(KeyDisplay.label(for: keybind.key))
+                    .textCase(KeyDisplay.isWord(keybind.key) ? .none : .uppercase)
             } else {
                 Text(keybind.rawTrigger)
                     .font(.system(.body, design: .monospaced))
@@ -185,10 +190,21 @@ private struct KeybindRow: View {
 
     private var actionLabel: String {
         let base = ActionLabels.label(for: keybind.action.verb)
-        if let param = keybind.action.parameter, !param.isEmpty {
-            return "\(base) (\(param))"
+        guard let param = keybind.action.parameter, !param.isEmpty else { return base }
+        return "\(base) (\(displayParameter(param, verb: keybind.action.verb)))"
+    }
+
+    /// `text:` / `csi:` / `esc:` actions carry config-syntax-escaped payloads
+    /// (`\\x05` for the Ctrl-E byte, `\\033` for ESC, etc.). Ghostty's
+    /// `+list-keybinds --default` prints them verbatim, so the user sees
+    /// `\\x05` which reads as a typo. Collapse `\\` → `\` for display.
+    private func displayParameter(_ param: String, verb: String) -> String {
+        switch verb.lowercased() {
+        case "text", "csi", "esc":
+            param.replacingOccurrences(of: #"\\"#, with: #"\"#)
+        default:
+            param
         }
-        return base
     }
 
     private var prefixChips: [String] {
@@ -196,20 +212,55 @@ private struct KeybindRow: View {
             .sorted { $0.rawValue < $1.rawValue }
             .map { "\($0.rawValue):" }
     }
+}
 
-    private func displayKey(_ key: String) -> String {
-        switch key {
-        case "up": "↑"
-        case "down": "↓"
-        case "left": "←"
-        case "right": "→"
-        case "enter": "↩"
-        case "tab": "⇥"
-        case "escape": "⎋"
-        case "space": "␣"
-        case "delete", "backspace": "⌫"
-        default: key
+/// Friendlier rendering for Ghostty's raw key tokens.
+///
+/// Ghostty's `+list-keybinds --default` emits canonical tokens like `digit_1`,
+/// `arrow_left`, `page_up`, `home`, plus word-keys (`copy`, `paste`,
+/// `f5`). The chip used to render whatever it received in upper-case — `⌘
+/// DIGIT_1`, all-caps `COPY` — which read as bugs to anyone who didn't write
+/// the parser. This helper maps tokens to glyphs/digits where possible and
+/// flags word-keys so the chip can leave them title-cased.
+enum KeyDisplay {
+    static func label(for key: String) -> String {
+        let lower = key.lowercased()
+        if let prefix = ["digit_": "", "kp_": ""].first(where: { lower.hasPrefix($0.key) }) {
+            return String(lower.dropFirst(prefix.key.count))
         }
+        switch lower {
+        case "arrow_up", "up": return "↑"
+        case "arrow_down", "down": return "↓"
+        case "arrow_left", "left": return "←"
+        case "arrow_right", "right": return "→"
+        case "page_up": return "⇞"
+        case "page_down": return "⇟"
+        case "home": return "↖"
+        case "end": return "↘"
+        case "enter", "return": return "↩"
+        case "tab": return "⇥"
+        case "escape": return "⎋"
+        case "space": return "␣"
+        case "delete", "backspace": return "⌫"
+        case "forward_delete": return "⌦"
+        default:
+            // Capitalise multi-letter words so "Copy" reads better than "COPY",
+            // and leave single chars / function-key tokens to the textCase
+            // modifier upstream.
+            if isWord(lower) { return lower.capitalized }
+            return key
+        }
+    }
+
+    /// True when the token should be rendered as a word (e.g. "Copy"), not
+    /// upper-cased as a single key.
+    static func isWord(_ key: String) -> Bool {
+        let lower = key.lowercased()
+        // Function keys (`f1`–`f24`) are short tokens but conventionally caps.
+        if lower.range(of: #"^f\d{1,2}$"#, options: .regularExpression) != nil {
+            return false
+        }
+        return lower.count > 1 && lower.allSatisfy(\.isLetter)
     }
 }
 
@@ -237,6 +288,10 @@ private struct DefaultKeybindsSection: View {
                             .font(.caption.monospacedDigit())
                             .foregroundStyle(.tertiary)
                     }
+                    // Without this, the Spacer's empty area doesn't register
+                    // taps — only the text glyphs do — so clicks on the
+                    // right-hand side of the row mysteriously do nothing.
+                    .contentShape(Rectangle())
                 }
             }
         } header: {
@@ -249,14 +304,32 @@ private struct DefaultKeybindsSection: View {
     }
 
     /// Stable per-pane category ordering (matches the action picker's display
-    /// order). Categories with no entries are dropped.
+    /// order). Categories with no entries are dropped. Within a category we
+    /// dedupe by (verb, parameter), keeping the first trigger Ghostty listed —
+    /// this folds aliases like ⌘1 / ⌘DIGIT_1 (both `goto_tab:1`) into one row.
     private var groupedCategories: [(ActionLabels.Category, [Keybind])] {
-        let buckets = Dictionary(grouping: keybinds) { kb in
+        let deduped = keybinds.deduplicated { kb in
+            "\(kb.action.verb)|\(kb.action.parameter ?? "")"
+        }
+        let buckets = Dictionary(grouping: deduped) { kb in
             ActionLabels.entry(for: kb.action.verb)?.category ?? .custom
         }
         return ActionLabels.Category.allCases.compactMap { category in
             guard let items = buckets[category], !items.isEmpty else { return nil }
             return (category, items)
         }
+    }
+}
+
+private extension Array {
+    /// Stable dedup that keeps the first element matching each key.
+    func deduplicated<K: Hashable>(by key: (Element) -> K) -> [Element] {
+        var seen: Set<K> = []
+        var result: [Element] = []
+        result.reserveCapacity(count)
+        for item in self where seen.insert(key(item)).inserted {
+            result.append(item)
+        }
+        return result
     }
 }

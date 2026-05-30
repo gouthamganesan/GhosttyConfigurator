@@ -315,6 +315,27 @@ enum ResizeOverlay: String, CaseIterable, Identifiable, Hashable {
 
 // MARK: - Keyboard
 
+/// `macos-shortcuts` — whether macOS Shortcuts.app can drive Ghostty.
+/// Tri-state, not a Bool: `ask` (Ghostty prompts on first invocation),
+/// `allow` (no prompts), `deny` (Shortcuts blocked outright). Default is
+/// `ask`, which we represent by deleting the key entirely so the file
+/// stays terse.
+enum MacosShortcuts: String, CaseIterable, Identifiable, Hashable {
+    case ask, allow, deny
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .ask: "Ask first (default)"
+        case .allow: "Allow without prompting"
+        case .deny: "Deny"
+        }
+    }
+}
+
 /// `macos-option-as-alt` — whether macOS Option keys behave as Alt/Meta.
 /// 5-state model: `default` represents "key absent" (Ghostty's documented
 /// default = `false`, but kept distinct so the UI can show "Auto" without

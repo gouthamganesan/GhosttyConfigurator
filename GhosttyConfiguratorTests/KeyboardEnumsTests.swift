@@ -63,4 +63,25 @@ final class KeyboardEnumsTests: XCTestCase {
         let value = file.enumValue(MacosOptionAsAlt.self, for: "macos-option-as-alt", default: .default)
         XCTAssertEqual(value, .both)
     }
+
+    // MARK: - macos-shortcuts (tri-state, not Bool)
+
+    func testMacosShortcutsAllRawValues() {
+        XCTAssertEqual(MacosShortcuts(rawValue: "ask"), .ask)
+        XCTAssertEqual(MacosShortcuts(rawValue: "allow"), .allow)
+        XCTAssertEqual(MacosShortcuts(rawValue: "deny"), .deny)
+    }
+
+    func testMacosShortcutsReadFromConfig() {
+        let source = "macos-shortcuts = allow\n"
+        let file = ConfigFile(parsed: ConfigParser.parse(source))
+        let value = file.enumValue(MacosShortcuts.self, for: "macos-shortcuts", default: .ask)
+        XCTAssertEqual(value, .allow)
+    }
+
+    func testMacosShortcutsAbsentFallsBackToAsk() {
+        let file = ConfigFile()
+        let value = file.enumValue(MacosShortcuts.self, for: "macos-shortcuts", default: .ask)
+        XCTAssertEqual(value, .ask)
+    }
 }

@@ -133,7 +133,7 @@ final class ConfigStore {
 
         // Keyboard
         let macosOptionAsAlt: MacosOptionAsAlt = .default
-        let macosShortcuts: Bool = true
+        let macosShortcuts: MacosShortcuts = .ask
 
         // General
         let autoUpdate: AutoUpdateMode = .check
@@ -1021,9 +1021,23 @@ final class ConfigStore {
         }
     }
 
-    var macosShortcuts: Bool {
-        get { file.bool(for: "macos-shortcuts", default: defaults.macosShortcuts) }
-        set { setBool("macos-shortcuts", newValue, label: "Toggle macOS Shortcuts") }
+    /// `macos-shortcuts` — Shortcuts.app permission. Picker writes `allow` /
+    /// `deny`; selecting the default (`ask`) deletes the key so the file
+    /// matches Ghostty's out-of-the-box behaviour.
+    var macosShortcuts: MacosShortcuts {
+        get {
+            guard let raw = file.scalarValue(for: "macos-shortcuts"), !raw.isEmpty else {
+                return .ask
+            }
+            return MacosShortcuts(rawValue: raw) ?? .ask
+        }
+        set {
+            if newValue == .ask {
+                deleteKey("macos-shortcuts", label: "Reset macOS Shortcuts")
+            } else {
+                setScalar("macos-shortcuts", value: newValue.rawValue, label: "Change macOS Shortcuts")
+            }
+        }
     }
 
     // MARK: - Keybinds
