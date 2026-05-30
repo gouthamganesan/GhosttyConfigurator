@@ -274,6 +274,16 @@ final class ConfigStore {
         }.value
     }
 
+    /// Location of the row's value on disk, if the key is set in the active
+    /// config file. Returned as `(file URL, 1-indexed line number)` — the
+    /// provenance popover surfaces both. Includes aren't walked yet (A3
+    /// brings profile-aware provenance); for now this is "set in *your*
+    /// config file" vs "default".
+    func provenance(forKey key: String) -> (url: URL, line: Int)? {
+        guard let line = file.entryLine(for: key) else { return nil }
+        return (fileURL, line)
+    }
+
     /// All current lint findings, keyed by Ghostty docKey. Views look up
     /// their own key via `RowAffix` — no per-pane wiring required.
     var validationIssues: [String: ValidationIssue] {

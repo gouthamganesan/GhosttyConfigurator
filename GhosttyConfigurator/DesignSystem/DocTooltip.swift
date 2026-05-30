@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Info-circle that surfaces documentation for a config row. Curated entries
@@ -7,10 +8,16 @@ import SwiftUI
 /// Otherwise falls back to `SchemaStore.shared`, which reads
 /// `ghostty +show-config --default --docs` at first launch and caches per
 /// Ghostty version.
+///
+/// Always includes a Provenance section (A4): "Set in: `<file>:<line>`" if
+/// the user has written the key, plus the bundled default from the schema.
+/// Reveals the merge order in the way `docs/00-PLAN.md` §6.4 calls out —
+/// "default to revealing what Ghostty does".
 struct DocTooltip: View {
     let key: String
     @State private var isShown = false
     @Environment(SchemaStore.self) private var schemaStore
+    @Environment(ConfigStore.self) private var configStore
 
     /// Most keys map 1:1 to a schema entry, but a few `docKey:` strings the
     /// panes pass aren't real Ghostty keys (e.g. "shell-integration-features
@@ -44,12 +51,14 @@ struct DocTooltip: View {
         }
     }
 
-    @ViewBuilder
     private var popoverContent: some View {
-        if let override {
-            overrideContent(override)
-        } else {
-            schemaContent
+        VStack(alignment: .leading, spacing: 10) {
+            if let override {
+                overrideContent(override)
+            } else {
+                schemaContent
+            }
+            provenanceContent
         }
     }
 
@@ -71,6 +80,85 @@ struct DocTooltip: View {
         }
     }
 
+    /// "Set in `<file>:<line>` / Default: …" block. Always rendered so the
+    /// user can tell "this is bundled" from "you (or an include) wrote this"
+    /// without leaving the popover.
+    @ViewBuilder
+    private var provenanceContent: some View {
+        let provenance = configStore.provenance(forKey: lookupKey)
+        let defaultValue = schemaStore.entry(for: lookupKey)?.defaultValue ?? ""
+
+        if provenance != nil || !defaultValue.isEmpty {
+            Divider()
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Source")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+
+                if let provenance {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Image(systemName: "doc.text.fill")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                        Text("Set in")
+                            .foregroundStyle(.secondary)
+                        Button {
+                            revealInFinder(provenance.url, line: provenance.line)
+                        } label: {
+                            Text("\(prettyPath(provenance.url)):\(provenance.line)")
+                                .font(.system(.callout, design: .monospaced))
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                        .buttonStyle(.link)
+                        .help("Reveal in Finder")
+                    }
+                    .font(.callout)
+                } else if !defaultValue.isEmpty {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Image(systemName: "circle.dashed")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                        Text("Using Ghostty's default — not set in your config.")
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.callout)
+                }
+
+                if !defaultValue.isEmpty {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Image(systemName: "arrow.uturn.backward")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                        Text("Default")
+                            .foregroundStyle(.secondary)
+                        Text(defaultValue)
+                            .font(.system(.callout, design: .monospaced))
+                            .textSelection(.enabled)
+                    }
+                    .font(.callout)
+                }
+            }
+        }
+    }
+
+    private func prettyPath(_ url: URL) -> String {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        var path = url.path
+        if path.hasPrefix(home) {
+            path = "~" + path.dropFirst(home.count)
+        }
+        return path
+    }
+
+    private func revealInFinder(_ url: URL, line _: Int) {
+        // Finder doesn't natively scroll to a line; revealing the file is the
+        // best universal action. Users with text-editor-via-URL setups can
+        // grab the path from the label itself.
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+
     private var schemaContent: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(lookupKey)
@@ -84,17 +172,8 @@ struct DocTooltip: View {
                         .foregroundStyle(.primary)
                         .textSelection(.enabled)
                 }
-                if !entry.defaultValue.isEmpty {
-                    Divider()
-                    HStack(alignment: .top, spacing: 6) {
-                        Text("Default:")
-                            .foregroundStyle(.secondary)
-                        Text(entry.defaultValue)
-                            .font(.system(.callout, design: .monospaced))
-                            .textSelection(.enabled)
-                    }
-                    .font(.callout)
-                }
+                // Default value moved to the provenance block at the bottom
+                // so all "where does this come from" info lives together.
             } else if !schemaStore.isLoaded {
                 Text("Loading schema…")
                     .foregroundStyle(.secondary)

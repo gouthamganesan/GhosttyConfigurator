@@ -43,6 +43,20 @@ struct ConfigFile: Hashable {
         }
     }
 
+    /// Line number (1-indexed) of the last `kv` entry for `key`, or nil if
+    /// the key is unset. Mirrors `scalarValue(for:)`'s last-wins semantics —
+    /// the line shown matches the line whose value Ghostty actually honours.
+    func entryLine(for key: String) -> Int? {
+        let canonical = key.lowercased()
+        var lastLine: Int?
+        for entry in parsed.entries {
+            if case let .kv(kv) = entry, kv.key == canonical {
+                lastLine = kv.lineNumber
+            }
+        }
+        return lastLine
+    }
+
     /// True if any `kv` entry exists for `key`.
     func contains(key: String) -> Bool {
         let canonical = key.lowercased()
