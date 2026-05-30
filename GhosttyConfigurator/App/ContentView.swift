@@ -87,7 +87,7 @@ struct ContentView: View {
         case .shell: ShellPane()
         case .clipboardMouse: ClipboardAndMousePane()
         case .general: GeneralPane()
-        case .advanced: PlaceholderPane(section: section)
+        case .advanced: AdvancedPane()
         case .about: AboutPane()
         }
     }

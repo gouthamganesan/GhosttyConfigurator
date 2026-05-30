@@ -1354,7 +1354,14 @@ final class ConfigStore {
         schedulePersist()
     }
 
-    private func schedulePersist() {
+    /// Internal mutation hook for extensions that need to touch raw `ParsedConfig`
+    /// entries (profile add/move/remove, etc.). Keeps `file` `private(set)` so
+    /// pane code can't bypass the setter pipeline.
+    func mutateFile(_ block: (inout ConfigFile) -> Void) {
+        block(&file)
+    }
+
+    func schedulePersist() {
         persistTask?.cancel()
         let snapshot = file
         persistTask = Task { [weak self] in
