@@ -1,11 +1,10 @@
-import XCTest
 @testable import GhosttyConfigurator
+import XCTest
 
 /// Round-trip coverage for the Window pane enum migrations (A2):
 /// - `macos-non-native-fullscreen` migrated from Bool to a 4-state enum
 /// - new enums for proxy-icon, padding-color, new-tab-position, resize-overlay
 final class WindowEnumsTests: XCTestCase {
-
     // MARK: - macos-non-native-fullscreen
 
     func testNonNativeFullscreenAllRawValues() {
@@ -26,18 +25,22 @@ final class WindowEnumsTests: XCTestCase {
     func testNonNativeFullscreenReadFromConfig() {
         let source = "macos-non-native-fullscreen = padded-notch\n"
         let file = ConfigFile(parsed: ConfigParser.parse(source))
-        let value = file.enumValue(MacosNonNativeFullscreen.self,
-                                    for: "macos-non-native-fullscreen",
-                                    default: .off)
+        let value = file.enumValue(
+            MacosNonNativeFullscreen.self,
+            for: "macos-non-native-fullscreen",
+            default: .off
+        )
         XCTAssertEqual(value, .paddedNotch)
     }
 
     func testNonNativeFullscreenFallsBackOnGarbage() {
         let source = "macos-non-native-fullscreen = banana\n"
         let file = ConfigFile(parsed: ConfigParser.parse(source))
-        let value = file.enumValue(MacosNonNativeFullscreen.self,
-                                    for: "macos-non-native-fullscreen",
-                                    default: .off)
+        let value = file.enumValue(
+            MacosNonNativeFullscreen.self,
+            for: "macos-non-native-fullscreen",
+            default: .off
+        )
         XCTAssertEqual(value, .off)
     }
 

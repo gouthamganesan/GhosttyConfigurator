@@ -21,15 +21,15 @@ struct AboutPane: View {
     }
 
     private let docsLinks: [(String, String)] = [
-        ("Ghostty website",               "https://ghostty.org"),
-        ("Configuration docs",            "https://ghostty.org/docs/config"),
-        ("Full option reference",         "https://ghostty.org/docs/config/reference"),
-        ("Keybindings reference",         "https://ghostty.org/docs/config/keybind"),
-        ("Keybind actions reference",     "https://ghostty.org/docs/config/keybind/reference"),
-        ("Trigger sequences (chords)",    "https://ghostty.org/docs/config/keybind/sequence"),
-        ("Themes (community)",            "https://github.com/ghostty-org/ghostty/tree/main/src/config/themes"),
-        ("Ghostty source code",           "https://github.com/ghostty-org/ghostty"),
-        ("Report a Ghostty issue",        "https://github.com/ghostty-org/ghostty/issues")
+        ("Ghostty website", "https://ghostty.org"),
+        ("Configuration docs", "https://ghostty.org/docs/config"),
+        ("Full option reference", "https://ghostty.org/docs/config/reference"),
+        ("Keybindings reference", "https://ghostty.org/docs/config/keybind"),
+        ("Keybind actions reference", "https://ghostty.org/docs/config/keybind/reference"),
+        ("Trigger sequences (chords)", "https://ghostty.org/docs/config/keybind/sequence"),
+        ("Themes (community)", "https://github.com/ghostty-org/ghostty/tree/main/src/config/themes"),
+        ("Ghostty source code", "https://github.com/ghostty-org/ghostty"),
+        ("Report a Ghostty issue", "https://github.com/ghostty-org/ghostty/issues")
     ]
 
     var body: some View {
@@ -84,8 +84,10 @@ struct AboutPane: View {
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(title: "About",
-                     subtitle: "Version \(marketingVersion) (\(buildNumber))")
+        .paneToolbar(
+            title: "About",
+            subtitle: "Version \(marketingVersion) (\(buildNumber))"
+        )
     }
 }
 

@@ -69,4 +69,3 @@ struct PaneHeaderRow: View {
             .listRowInsets(EdgeInsets(top: 8, leading: 4, bottom: 12, trailing: 4))
     }
 }
-

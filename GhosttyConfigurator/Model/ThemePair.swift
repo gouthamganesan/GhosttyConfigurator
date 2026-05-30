@@ -6,13 +6,15 @@ import Foundation
 ///
 /// Values can be quoted (`"Flexoki Light"`) or unquoted. We preserve the
 /// pair's exact rendering when round-tripping.
-struct ThemePair: Hashable, Sendable {
+struct ThemePair: Hashable {
     var light: String?
     var dark: String?
     var single: String?
 
     /// True when the value is a `light:…,dark:…` pair.
-    var isPair: Bool { light != nil && dark != nil }
+    var isPair: Bool {
+        light != nil && dark != nil
+    }
 
     init() {}
 
@@ -26,10 +28,10 @@ struct ThemePair: Hashable, Sendable {
         // Heuristic: if both "light:" and "dark:" markers exist near the
         // start of clauses, parse as a pair. Otherwise treat as single.
         if let pair = Self.parseAsPair(raw) {
-            self.light = pair.light
-            self.dark = pair.dark
+            light = pair.light
+            dark = pair.dark
         } else {
-            self.single = raw
+            single = raw
         }
     }
 
@@ -60,8 +62,8 @@ struct ThemePair: Hashable, Sendable {
             let value = unquote(valueRaw)
             switch key {
             case "light": light = value
-            case "dark":  dark = value
-            default:      continue
+            case "dark": dark = value
+            default: continue
             }
         }
         if let light, let dark { return (light, dark) }
@@ -75,7 +77,7 @@ struct ThemePair: Hashable, Sendable {
         var inQuotes = false
         for ch in raw {
             if ch == "\"" { inQuotes.toggle() }
-            if ch == "," && !inQuotes {
+            if ch == ",", !inQuotes {
                 out.append(current)
                 current = ""
             } else {

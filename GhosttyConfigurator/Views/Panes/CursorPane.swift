@@ -14,9 +14,11 @@ struct CursorPane: View {
                     }
                     .labelsHidden().pickerStyle(.menu).fixedSize()
                 } label: {
-                    rowLabel("Style",
-                             modified: store.isModified(\.cursorStyle, default: store.defaults.cursorStyle),
-                             docKey: "cursor-style")
+                    rowLabel(
+                        "Style",
+                        modified: store.isModified(\.cursorStyle, default: store.defaults.cursorStyle),
+                        docKey: "cursor-style"
+                    )
                 }
 
                 LabeledContent {
@@ -25,23 +27,27 @@ struct CursorPane: View {
                     }
                     .labelsHidden().pickerStyle(.menu).fixedSize()
                 } label: {
-                    rowLabel("Blink",
-                             modified: store.isModified(\.cursorStyleBlink, default: store.defaults.cursorStyleBlink),
-                             docKey: "cursor-style-blink")
+                    rowLabel(
+                        "Blink",
+                        modified: store.isModified(\.cursorStyleBlink, default: store.defaults.cursorStyleBlink),
+                        docKey: "cursor-style-blink"
+                    )
                 }
 
                 LabeledContent {
                     SystemSettingsSlider(
                         value: $store.cursorOpacity,
-                        range: 0...1,
+                        range: 0 ... 1,
                         leadingLabel: "Transparent",
                         trailingLabel: "Opaque"
                     )
                     .frame(width: 240)
                 } label: {
-                    rowLabel("Opacity",
-                             modified: store.isModified(\.cursorOpacity, default: store.defaults.cursorOpacity),
-                             docKey: "cursor-opacity")
+                    rowLabel(
+                        "Opacity",
+                        modified: store.isModified(\.cursorOpacity, default: store.defaults.cursorOpacity),
+                        docKey: "cursor-opacity"
+                    )
                 }
 
                 LabeledContent {
@@ -54,9 +60,11 @@ struct CursorPane: View {
                         }
                     }
                 } label: {
-                    rowLabel("Color",
-                             modified: !store.isCursorColorAuto,
-                             docKey: "cursor-color")
+                    rowLabel(
+                        "Color",
+                        modified: !store.isCursorColorAuto,
+                        docKey: "cursor-color"
+                    )
                 }
 
                 LabeledContent {
@@ -71,27 +79,38 @@ struct CursorPane: View {
                         }
                     }
                 } label: {
-                    rowLabel("Text color",
-                             modified: store.cursorTextMode != store.defaults.cursorTextMode,
-                             docKey: "cursor-text")
+                    rowLabel(
+                        "Text color",
+                        modified: store.cursorTextMode != store.defaults.cursorTextMode,
+                        docKey: "cursor-text"
+                    )
                 }
             } header: {
                 Text("Appearance")
             } footer: {
-                Text("**Blink** \"Default\" lets programs control blinking via DEC Mode 12; \"Always\"/\"Never\" lock the cursor and ignore that mode. **Text color** draws the text *under* the cursor — set it to *cell foreground* for inverted-cursor look.")
+                Text(
+                    "**Blink** \"Default\" lets programs control blinking via DEC Mode 12; \"Always\"/\"Never\" lock the cursor and ignore that mode. **Text color** draws the text *under* the cursor — set it to *cell foreground* for inverted-cursor look."
+                )
             }
 
             Section {
                 Toggle(isOn: $store.cursorClickToMove) {
-                    rowLabel("Click to move cursor",
-                             modified: store.isModified(\.cursorClickToMove, default: store.defaults.cursorClickToMove),
-                             docKey: "cursor-click-to-move")
+                    rowLabel(
+                        "Click to move cursor",
+                        modified: store.isModified(\.cursorClickToMove, default: store.defaults.cursorClickToMove),
+                        docKey: "cursor-click-to-move"
+                    )
                 }
 
                 Toggle(isOn: $store.mouseHideWhileTyping) {
-                    rowLabel("Hide mouse while typing",
-                             modified: store.isModified(\.mouseHideWhileTyping, default: store.defaults.mouseHideWhileTyping),
-                             docKey: "mouse-hide-while-typing")
+                    rowLabel(
+                        "Hide mouse while typing",
+                        modified: store.isModified(
+                            \.mouseHideWhileTyping,
+                            default: store.defaults.mouseHideWhileTyping
+                        ),
+                        docKey: "mouse-hide-while-typing"
+                    )
                 }
             } header: {
                 Text("Behavior")
@@ -100,7 +119,9 @@ struct CursorPane: View {
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(title: "Cursor",
-                     subtitle: "Shape, blink, click behavior.")
+        .paneToolbar(
+            title: "Cursor",
+            subtitle: "Shape, blink, click behavior."
+        )
     }
 }

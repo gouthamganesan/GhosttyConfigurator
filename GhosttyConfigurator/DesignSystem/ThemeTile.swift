@@ -24,8 +24,10 @@ struct ThemeTile: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(isSelected ? Color.accentColor : Color(NSColor.separatorColor),
-                            lineWidth: isSelected ? 2 : 0.5)
+                    .stroke(
+                        isSelected ? Color.accentColor : Color(NSColor.separatorColor),
+                        lineWidth: isSelected ? 2 : 0.5
+                    )
             )
         }
         .buttonStyle(.plain)
@@ -54,7 +56,7 @@ struct ThemeTile: View {
 
     private var paletteStrip: some View {
         HStack(spacing: 1) {
-            ForEach(0..<16, id: \.self) { idx in
+            ForEach(0 ..< 16, id: \.self) { idx in
                 Rectangle()
                     .fill(ColorParsing.color(from: theme.palette[idx]) ?? Color.gray)
                     .frame(height: 10)

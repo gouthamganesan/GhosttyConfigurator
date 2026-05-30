@@ -138,7 +138,6 @@ struct ThemeBrowserView: View {
 
     // MARK: - Sections
 
-    @ViewBuilder
     private func previewHeader(theme: Theme) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -201,8 +200,8 @@ struct ThemeBrowserView: View {
     private func loadThemes() async {
         let all = await ThemeLibrary.shared.loadAll()
         await MainActor.run {
-            self.themes = all
-            self.isLoading = false
+            themes = all
+            isLoading = false
             // Pre-select the currently configured theme if it exists.
             if selectedName == nil {
                 selectedName = preselectedName()
@@ -213,11 +212,11 @@ struct ThemeBrowserView: View {
     private func preselectedName() -> String? {
         switch mode {
         case .single:
-            return store.themePair.single ?? store.themePair.light ?? store.themePair.dark
+            store.themePair.single ?? store.themePair.light ?? store.themePair.dark
         case .lightPair:
-            return store.themePair.light ?? store.themePair.single
+            store.themePair.light ?? store.themePair.single
         case .darkPair:
-            return store.themePair.dark ?? store.themePair.single
+            store.themePair.dark ?? store.themePair.single
         }
     }
 
@@ -244,9 +243,9 @@ enum ThemeBrowserMode: Hashable {
 
     var title: String {
         switch self {
-        case .single:    "Themes"
+        case .single: "Themes"
         case .lightPair: "Light Theme"
-        case .darkPair:  "Dark Theme"
+        case .darkPair: "Dark Theme"
         }
     }
 }
@@ -254,25 +253,27 @@ enum ThemeBrowserMode: Hashable {
 enum ThemeFilter: String, CaseIterable, Identifiable {
     case all, light, dark, bundled, user
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var label: String {
         switch self {
-        case .all:     "All"
-        case .light:   "Light"
-        case .dark:    "Dark"
+        case .all: "All"
+        case .light: "Light"
+        case .dark: "Dark"
         case .bundled: "Bundled"
-        case .user:    "User"
+        case .user: "User"
         }
     }
 
     func matches(_ theme: Theme) -> Bool {
         switch self {
-        case .all:     true
-        case .light:   !theme.isDark
-        case .dark:    theme.isDark
+        case .all: true
+        case .light: !theme.isDark
+        case .dark: theme.isDark
         case .bundled: theme.source == .bundled
-        case .user:    theme.source == .user
+        case .user: theme.source == .user
         }
     }
 }

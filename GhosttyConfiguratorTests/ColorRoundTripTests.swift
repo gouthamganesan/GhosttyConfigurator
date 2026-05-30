@@ -1,12 +1,11 @@
-import XCTest
-import SwiftUI
 @testable import GhosttyConfigurator
+import SwiftUI
+import XCTest
 
 /// Round-trip coverage for the Colors section of AppearancePane (A1):
 /// - hex parse + serialize symmetry
 /// - bold-color tri-state derivation from the raw config value
 final class ColorRoundTripTests: XCTestCase {
-
     // MARK: - Hex parse/serialize
 
     func testHexRoundTrip() {
@@ -17,8 +16,11 @@ final class ColorRoundTripTests: XCTestCase {
                 continue
             }
             let serialized = ColorParsing.hexString(from: color)
-            XCTAssertEqual(serialized.uppercased(), hex.uppercased(),
-                           "Round-trip changed value: \(hex) → \(serialized)")
+            XCTAssertEqual(
+                serialized.uppercased(),
+                hex.uppercased(),
+                "Round-trip changed value: \(hex) → \(serialized)"
+            )
         }
     }
 

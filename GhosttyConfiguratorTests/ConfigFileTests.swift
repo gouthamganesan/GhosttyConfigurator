@@ -1,5 +1,5 @@
-import XCTest
 @testable import GhosttyConfigurator
+import XCTest
 
 final class ConfigFileTests: XCTestCase {
     // MARK: - Reading

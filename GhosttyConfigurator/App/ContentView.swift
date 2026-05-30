@@ -20,7 +20,7 @@ struct ContentView: View {
             Sidebar(selection: selection, searchText: $searchText)
         } detail: {
             VStack(spacing: 0) {
-                if !store.ghosttyInstalled && !installBannerDismissed {
+                if !store.ghosttyInstalled, !installBannerDismissed {
                     InstallBanner(isDismissed: $installBannerDismissed)
                 }
                 NavigationStack {
@@ -61,7 +61,6 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
     private func pane(for section: SidebarSection) -> some View {
         // Reload button lives in the toolbar's trailing slot for every pane.
         // The pane header (icon + title + subtitle) is rendered by each pane's
@@ -78,16 +77,16 @@ struct ContentView: View {
     @ViewBuilder
     private func paneBody(for section: SidebarSection) -> some View {
         switch section {
-        case .appearance:       AppearancePane()
-        case .window:           WindowPane()
-        case .font:             FontPane()
-        case .cursor:           CursorPane()
-        case .keyboard:         KeyboardPane()
-        case .shell:            ShellPane()
-        case .clipboardMouse:   ClipboardAndMousePane()
-        case .general:          GeneralPane()
-        case .advanced:         PlaceholderPane(section: section)
-        case .about:            AboutPane()
+        case .appearance: AppearancePane()
+        case .window: WindowPane()
+        case .font: FontPane()
+        case .cursor: CursorPane()
+        case .keyboard: KeyboardPane()
+        case .shell: ShellPane()
+        case .clipboardMouse: ClipboardAndMousePane()
+        case .general: GeneralPane()
+        case .advanced: PlaceholderPane(section: section)
+        case .about: AboutPane()
         }
     }
 }

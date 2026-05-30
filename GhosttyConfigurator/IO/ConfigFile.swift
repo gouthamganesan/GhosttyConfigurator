@@ -10,7 +10,7 @@ import SwiftUI
 /// - **List append** — add a `kv` after the last matching one, or at end.
 /// - **Reset** — emit `key =` (empty value), the documented "use default" form.
 /// - **Delete** — drop the matching `kv` lines entirely (different from reset).
-struct ConfigFile: Hashable, Sendable {
+struct ConfigFile: Hashable {
     var parsed: ParsedConfig
 
     init(parsed: ParsedConfig = .empty) {
@@ -27,7 +27,7 @@ struct ConfigFile: Hashable, Sendable {
         let canonical = key.lowercased()
         var last: String?
         for entry in parsed.entries {
-            if case .kv(let kv) = entry, kv.key == canonical {
+            if case let .kv(kv) = entry, kv.key == canonical {
                 last = kv.value
             }
         }
@@ -38,7 +38,7 @@ struct ConfigFile: Hashable, Sendable {
     func listValues(for key: String) -> [String] {
         let canonical = key.lowercased()
         return parsed.entries.compactMap {
-            if case .kv(let kv) = $0, kv.key == canonical { return kv.value }
+            if case let .kv(kv) = $0, kv.key == canonical { return kv.value }
             return nil
         }
     }
@@ -47,7 +47,7 @@ struct ConfigFile: Hashable, Sendable {
     func contains(key: String) -> Bool {
         let canonical = key.lowercased()
         return parsed.entries.contains { entry in
-            if case .kv(let kv) = entry { return kv.key == canonical }
+            if case let .kv(kv) = entry { return kv.key == canonical }
             return false
         }
     }
@@ -55,7 +55,7 @@ struct ConfigFile: Hashable, Sendable {
     /// All include directives, in source order.
     func includes() -> [ConfigEntry.Include] {
         parsed.entries.compactMap {
-            if case .include(let inc) = $0 { return inc }
+            if case let .include(inc) = $0 { return inc }
             return nil
         }
     }
@@ -69,14 +69,14 @@ struct ConfigFile: Hashable, Sendable {
         let canonical = key.lowercased()
         var lastIndex: Int?
         for (i, entry) in parsed.entries.enumerated() {
-            if case .kv(let kv) = entry, kv.key == canonical {
+            if case let .kv(kv) = entry, kv.key == canonical {
                 lastIndex = i
             }
         }
         let newRaw = ConfigParser.formatKV(key: canonical, value: value)
 
         if let i = lastIndex {
-            if case .kv(let kv) = parsed.entries[i], kv.value == value, kv.raw == newRaw {
+            if case let .kv(kv) = parsed.entries[i], kv.value == value, kv.raw == newRaw {
                 return false
             }
             parsed.entries[i] = .kv(.init(
@@ -112,7 +112,7 @@ struct ConfigFile: Hashable, Sendable {
         var newEntries: [ConfigEntry] = []
         newEntries.reserveCapacity(parsed.entries.count)
         for entry in parsed.entries {
-            if case .kv(let kv) = entry, kv.key == canonical {
+            if case let .kv(kv) = entry, kv.key == canonical {
                 if firstMatch == nil { firstMatch = newEntries.count }
                 continue
             }
@@ -152,7 +152,7 @@ struct ConfigFile: Hashable, Sendable {
 
         var lastMatch: Int?
         for (i, e) in parsed.entries.enumerated() {
-            if case .kv(let kv) = e, kv.key == canonical { lastMatch = i }
+            if case let .kv(kv) = e, kv.key == canonical { lastMatch = i }
         }
         if let i = lastMatch {
             parsed.entries.insert(entry, at: i + 1)
@@ -177,7 +177,7 @@ struct ConfigFile: Hashable, Sendable {
         let canonical = key.lowercased()
         let before = parsed.entries.count
         parsed.entries.removeAll {
-            if case .kv(let kv) = $0 { return kv.key == canonical }
+            if case let .kv(kv) = $0 { return kv.key == canonical }
             return false
         }
         return parsed.entries.count != before
@@ -191,9 +191,9 @@ struct ConfigFile: Hashable, Sendable {
     func bool(for key: String, default defaultValue: Bool) -> Bool {
         guard let raw = scalarValue(for: key) else { return defaultValue }
         switch raw.lowercased() {
-        case "true":  return true
+        case "true": return true
         case "false": return false
-        default:      return defaultValue
+        default: return defaultValue
         }
     }
 
@@ -208,7 +208,8 @@ struct ConfigFile: Hashable, Sendable {
     }
 
     func enumValue<T: RawRepresentable>(_ type: T.Type, for key: String, default defaultValue: T) -> T
-    where T.RawValue == String {
+        where T.RawValue == String
+    {
         guard let raw = scalarValue(for: key), let value = T(rawValue: raw) else {
             return defaultValue
         }
@@ -292,14 +293,14 @@ struct ConfigFile: Hashable, Sendable {
     /// `+tag` entries first to keep them mutually exclusive.
     @discardableResult
     mutating func setFontNumerals(_ mode: FontNumerals) -> Bool {
-        let tags: Set<String> = ["tnum", "pnum", "onum", "lnum"]
+        let tags: Set = ["tnum", "pnum", "onum", "lnum"]
         var values = listValues(for: "font-feature").filter { value in
             let trimmed = value.trimmingCharacters(in: .whitespaces)
             guard trimmed.count >= 2 else { return true }
             let prefix = trimmed.first
             let tag = String(trimmed.dropFirst()).lowercased()
             // Drop any +tag / -tag matching the numerals set.
-            if (prefix == "+" || prefix == "-"), tags.contains(tag) {
+            if prefix == "+" || prefix == "-", tags.contains(tag) {
                 return false
             }
             return true
@@ -366,7 +367,7 @@ struct ConfigFile: Hashable, Sendable {
     // MARK: - Helpers
 
     private func lineNumber(for index: Int) -> Int {
-        if case .kv(let kv) = parsed.entries[index] { return kv.lineNumber }
+        if case let .kv(kv) = parsed.entries[index] { return kv.lineNumber }
         return index + 1
     }
 }

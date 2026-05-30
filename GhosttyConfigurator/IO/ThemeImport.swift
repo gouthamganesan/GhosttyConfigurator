@@ -12,9 +12,9 @@ enum ThemeImport {
 
         static func detect(url: URL) -> Format {
             switch url.pathExtension.lowercased() {
-            case "itermcolors": return .iterm2
-            case "json":        return .windowsTerminal
-            default:            return .unknown
+            case "itermcolors": .iterm2
+            case "json": .windowsTerminal
+            default: .unknown
             }
         }
     }
@@ -26,9 +26,9 @@ enum ThemeImport {
 
         var description: String {
             switch self {
-            case .unsupportedFormat:    "Only .itermcolors files are supported right now."
-            case .parseFailed(let m):   "Couldn't parse the theme file: \(m)"
-            case .writeFailed(let m):   "Couldn't write the theme: \(m)"
+            case .unsupportedFormat: "Only .itermcolors files are supported right now."
+            case let .parseFailed(m): "Couldn't parse the theme file: \(m)"
+            case let .writeFailed(m): "Couldn't write the theme: \(m)"
             }
         }
     }
@@ -81,7 +81,7 @@ private enum iTerm2 {
         var lines: [String] = []
 
         // ANSI palette 0..15.
-        for i in 0..<16 {
+        for i in 0 ..< 16 {
             let key = "Ansi \(i) Color"
             if let hex = hexColor(named: key, in: root) {
                 lines.append("palette = \(i)=#\(hex)")
@@ -90,12 +90,12 @@ private enum iTerm2 {
 
         // Standard mappings.
         let mappings: [(itermKey: String, ghosttyKey: String)] = [
-            ("Background Color",      "background"),
-            ("Foreground Color",      "foreground"),
-            ("Cursor Color",          "cursor-color"),
-            ("Cursor Text Color",     "cursor-text"),
-            ("Selection Color",       "selection-background"),
-            ("Selected Text Color",   "selection-foreground")
+            ("Background Color", "background"),
+            ("Foreground Color", "foreground"),
+            ("Cursor Color", "cursor-color"),
+            ("Cursor Text Color", "cursor-text"),
+            ("Selection Color", "selection-background"),
+            ("Selected Text Color", "selection-foreground")
         ]
         for (itermKey, ghosttyKey) in mappings {
             if let hex = hexColor(named: itermKey, in: root) {

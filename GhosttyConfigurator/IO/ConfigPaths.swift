@@ -9,7 +9,8 @@ enum ConfigPaths {
         let home = FileManager.default.homeDirectoryForCurrentUser
         let xdgRoot: URL = {
             if let custom = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"],
-               !custom.isEmpty {
+               !custom.isEmpty
+            {
                 return URL(fileURLWithPath: custom)
             }
             return home.appendingPathComponent(".config")

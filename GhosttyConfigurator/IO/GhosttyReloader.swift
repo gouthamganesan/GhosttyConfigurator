@@ -10,16 +10,16 @@ import os
 /// user denies — the configurator still writes config files just fine without
 /// this, the user just has to ⌘⇧, manually.
 enum GhosttyReloader {
-    enum ReloadError: Error, CustomStringConvertible, Sendable {
+    enum ReloadError: Error, CustomStringConvertible {
         case ghosttyNotRunning
         case ghosttyNotInstalled
         case osascriptFailed(String)
 
         var description: String {
             switch self {
-            case .ghosttyNotRunning:    "Ghostty isn't running."
-            case .ghosttyNotInstalled:  "Ghostty isn't installed."
-            case .osascriptFailed(let m): "Reload failed: \(m)"
+            case .ghosttyNotRunning: "Ghostty isn't running."
+            case .ghosttyNotInstalled: "Ghostty isn't installed."
+            case let .osascriptFailed(m): "Reload failed: \(m)"
             }
         }
     }

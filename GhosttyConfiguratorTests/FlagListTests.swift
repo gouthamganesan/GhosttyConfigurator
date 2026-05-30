@@ -1,5 +1,5 @@
-import XCTest
 @testable import GhosttyConfigurator
+import XCTest
 
 /// Tests for the two "flag list" patterns Ghostty uses:
 ///   1. `font-feature` — repeated key, each value is `+tag` or `-tag`.

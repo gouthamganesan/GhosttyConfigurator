@@ -1,11 +1,10 @@
-import XCTest
 @testable import GhosttyConfigurator
+import XCTest
 
 /// Round-trip coverage for the Shell pane env vars editor (B3). The editor
 /// rewrites the whole list each commit, so we cover parse + serialize plus
 /// drop-malformed behavior.
 final class EnvVarTests: XCTestCase {
-
     // MARK: - parse
 
     func testParseBasic() {

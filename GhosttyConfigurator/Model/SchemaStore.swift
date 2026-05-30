@@ -23,15 +23,15 @@ final class SchemaStore {
         // 1. Always start with the bundled schema so DocTooltip works immediately
         // — even before any runtime CLI introspection completes.
         if let bundled = Self.loadBundledSchema() {
-            self.schema = bundled
-            self.isLoaded = true
+            schema = bundled
+            isLoaded = true
             Logger.parser.info("SchemaStore: loaded \(bundled.entries.count) entries from bundle")
         }
 
         // 2. Best-effort: try the user's cache (if it exists from a prior run).
         if let cached = Self.readCache(), cached.entries.count >= schema.entries.count {
-            self.schema = cached
-            self.isLoaded = true
+            schema = cached
+            isLoaded = true
             Logger.parser.info("SchemaStore: refreshed from disk cache (\(cached.entries.count) entries)")
         }
 
@@ -44,14 +44,17 @@ final class SchemaStore {
             let output = try await Self.runIntrospection()
             let entries = Self.parse(output)
             let fresh = Schema(ghosttyVersion: version, entries: entries)
-            if fresh.entries.count >= self.schema.entries.count {
-                self.schema = fresh
+            if fresh.entries.count >= schema.entries.count {
+                schema = fresh
                 Self.writeCache(fresh)
-                Logger.parser.info("SchemaStore: introspected \(fresh.entries.count) entries (ghostty \(version, privacy: .public))")
+                Logger.parser
+                    .info(
+                        "SchemaStore: introspected \(fresh.entries.count) entries (ghostty \(version, privacy: .public))"
+                    )
             }
         } catch {
             let message = String(describing: error)
-            self.lastError = message
+            lastError = message
             Logger.parser.error("SchemaStore: introspection failed (using bundled) — \(message, privacy: .public)")
         }
     }
@@ -82,7 +85,7 @@ final class SchemaStore {
         var description: String {
             switch self {
             case .ghosttyNotFound: "Ghostty isn't installed at /Applications/Ghostty.app."
-            case .processFailed(let code, let stderr): "ghostty exited \(code): \(stderr)"
+            case let .processFailed(code, stderr): "ghostty exited \(code): \(stderr)"
             }
         }
     }
@@ -153,7 +156,7 @@ final class SchemaStore {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
 
             if trimmed.isEmpty {
-                if !docBuffer.isEmpty && docBuffer.last != "" {
+                if !docBuffer.isEmpty, docBuffer.last != "" {
                     docBuffer.append("")
                 }
                 continue
@@ -179,7 +182,7 @@ final class SchemaStore {
         return entries
     }
 
-    nonisolated private static func renderDocs(_ lines: [String]) -> String {
+    private nonisolated static func renderDocs(_ lines: [String]) -> String {
         var out: [String] = []
         var paragraph: [String] = []
         for line in lines {
@@ -202,10 +205,12 @@ final class SchemaStore {
 
     private static func cacheURL() -> URL? {
         let fm = FileManager.default
-        guard let dir = try? fm.url(for: .applicationSupportDirectory,
-                                     in: .userDomainMask,
-                                     appropriateFor: nil,
-                                     create: true) else { return nil }
+        guard let dir = try? fm.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        ) else { return nil }
         let appDir = dir.appendingPathComponent("com.gouthamj.ghostty-configurator", isDirectory: true)
         try? fm.createDirectory(at: appDir, withIntermediateDirectories: true)
         return appDir.appendingPathComponent("schema-cache.json")

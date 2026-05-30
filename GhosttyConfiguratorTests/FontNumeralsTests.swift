@@ -1,11 +1,10 @@
-import XCTest
 @testable import GhosttyConfigurator
+import XCTest
 
 /// Round-trip coverage for the Font pane numerals picker (B2). The picker
 /// is exclusive: setting one numerals tag clears the other three. Existing
 /// liga/calt features must survive the mutation.
 final class FontNumeralsTests: XCTestCase {
-
     func testNumeralsDefaultWhenNoTags() {
         let file = ConfigFile(parsed: ConfigParser.parse("font-feature = +liga\n"))
         XCTAssertEqual(file.fontNumerals(), .default)

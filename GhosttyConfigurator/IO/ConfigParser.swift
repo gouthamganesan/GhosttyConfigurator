@@ -5,21 +5,21 @@ import Foundation
 /// A single entry in a parsed Ghostty config file. Preserves enough info to
 /// serialize byte-for-byte identically — `raw` is the original line minus its
 /// terminator. Edits replace `raw` with a freshly generated line.
-enum ConfigEntry: Hashable, Sendable {
+enum ConfigEntry: Hashable {
     case blank
     case comment(raw: String)
     case kv(KV)
     case include(Include)
 
-    struct KV: Hashable, Sendable {
-        let key: String                 // canonical: lowercased, trimmed
-        let value: String               // unquoted, trimmed
-        let raw: String                 // exact original line (terminator stripped)
-        let lineNumber: Int             // 1-indexed
+    struct KV: Hashable {
+        let key: String // canonical: lowercased, trimmed
+        let value: String // unquoted, trimmed
+        let raw: String // exact original line (terminator stripped)
+        let lineNumber: Int // 1-indexed
     }
 
-    struct Include: Hashable, Sendable {
-        let path: String                // unquoted, trimmed (without leading `?`)
+    struct Include: Hashable {
+        let path: String // unquoted, trimmed (without leading `?`)
         let isOptional: Bool
         let raw: String
         let lineNumber: Int
@@ -29,10 +29,10 @@ enum ConfigEntry: Hashable, Sendable {
 // MARK: - ParsedConfig
 
 /// Result of parsing a config file. Holds enough to round-trip serialize.
-struct ParsedConfig: Hashable, Sendable {
+struct ParsedConfig: Hashable {
     var entries: [ConfigEntry]
-    let lineEnding: String              // "\n" or "\r\n"
-    let hasTrailingNewline: Bool        // true if the original ended with a terminator
+    let lineEnding: String // "\n" or "\r\n"
+    let hasTrailingNewline: Bool // true if the original ended with a terminator
 
     static let empty = ParsedConfig(entries: [], lineEnding: "\n", hasTrailingNewline: false)
 }
@@ -58,11 +58,10 @@ enum ConfigParser {
             }
         }
 
-        let rawLines: [String]
-        if lineEnding == "\r\n" {
-            rawLines = working.components(separatedBy: "\r\n")
+        let rawLines: [String] = if lineEnding == "\r\n" {
+            working.components(separatedBy: "\r\n")
         } else {
-            rawLines = working.components(separatedBy: "\n")
+            working.components(separatedBy: "\n")
         }
 
         var entries: [ConfigEntry] = []
@@ -125,10 +124,10 @@ enum ConfigParser {
     static func serialize(_ config: ParsedConfig) -> String {
         let lines: [String] = config.entries.map { entry in
             switch entry {
-            case .blank:                     return ""
-            case .comment(let raw):          return raw
-            case .kv(let kv):                return kv.raw
-            case .include(let include):      return include.raw
+            case .blank: ""
+            case let .comment(raw): raw
+            case let .kv(kv): kv.raw
+            case let .include(include): include.raw
             }
         }
         var output = lines.joined(separator: config.lineEnding)

@@ -3,7 +3,7 @@ import SwiftUI
 
 /// A parsed Ghostty theme — palette + bg/fg + selection + cursor colors.
 /// The theme name doubles as the value written to `theme = …` in the config.
-struct Theme: Hashable, Sendable, Identifiable {
+struct Theme: Hashable, Identifiable {
     let name: String
     let sourceURL: URL
     let source: ThemeSource
@@ -18,7 +18,9 @@ struct Theme: Hashable, Sendable, Identifiable {
     let selectionBackground: String?
     let selectionForeground: String?
 
-    var id: String { name }
+    var id: String {
+        name
+    }
 
     /// Background-luminance bucket. Themes whose `background` luminance is
     /// below 0.5 are considered dark. Drives the Light / Dark filter chips.
@@ -27,24 +29,26 @@ struct Theme: Hashable, Sendable, Identifiable {
     }
 }
 
-enum ThemeSource: Hashable, Sendable {
-    case bundled            // shipped inside Ghostty.app
-    case user               // user-installed (~/.config or AppSupport)
+enum ThemeSource: Hashable {
+    case bundled // shipped inside Ghostty.app
+    case user // user-installed (~/.config or AppSupport)
 
     var label: String {
         switch self {
         case .bundled: "Bundled"
-        case .user:    "User"
+        case .user: "User"
         }
     }
 }
 
 /// Lightweight reference used while enumerating themes — name + URL only,
 /// no parse cost. The browser loads the full `Theme` on demand.
-struct ThemeRef: Hashable, Sendable, Identifiable {
+struct ThemeRef: Hashable, Identifiable {
     let name: String
     let url: URL
     let source: ThemeSource
 
-    var id: String { name }
+    var id: String {
+        name
+    }
 }

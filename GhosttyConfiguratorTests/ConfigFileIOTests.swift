@@ -1,5 +1,5 @@
-import XCTest
 @testable import GhosttyConfigurator
+import XCTest
 
 /// Integration tests that exercise `ConfigFileIO` against the real filesystem
 /// (a temp directory copy of Goutham's actual config).
@@ -44,7 +44,7 @@ final class ConfigFileIOTests: XCTestCase {
         try await io.write(file)
 
         let onDisk = try String(contentsOf: configURL, encoding: .utf8)
-        let originalLines = (try Fixtures.string("real-goutham"))
+        let originalLines = try (Fixtures.string("real-goutham"))
             .split(separator: "\n", omittingEmptySubsequences: false)
         let outputLines = onDisk
             .split(separator: "\n", omittingEmptySubsequences: false)

@@ -1,5 +1,5 @@
-import XCTest
 @testable import GhosttyConfigurator
+import XCTest
 
 final class ConfigParserTests: XCTestCase {
     // MARK: - Round-trip identity (the gate)
@@ -34,9 +34,9 @@ final class ConfigParserTests: XCTestCase {
 
     // MARK: - Parser semantics
 
-    func testParsesScalarKV() throws {
+    func testParsesScalarKV() {
         let parsed = ConfigParser.parse("font-size = 14\n")
-        guard case .kv(let kv) = parsed.entries.first else {
+        guard case let .kv(kv) = parsed.entries.first else {
             return XCTFail("expected kv entry")
         }
         XCTAssertEqual(kv.key, "font-size")
@@ -53,14 +53,14 @@ final class ConfigParserTests: XCTestCase {
 
     func testParsesEmptyValueAsResetSemantics() {
         let parsed = ConfigParser.parse("font-family =\n")
-        guard case .kv(let kv) = parsed.entries.first else { return XCTFail() }
+        guard case let .kv(kv) = parsed.entries.first else { return XCTFail() }
         XCTAssertEqual(kv.key, "font-family")
         XCTAssertEqual(kv.value, "", "Empty value is preserved (Ghostty's reset-to-default)")
     }
 
     func testParsesIncludeDirective() {
         let parsed = ConfigParser.parse("config-file = ?optional/path.ghostty\n")
-        guard case .include(let inc) = parsed.entries.first else {
+        guard case let .include(inc) = parsed.entries.first else {
             return XCTFail("expected include")
         }
         XCTAssertTrue(inc.isOptional)
@@ -69,7 +69,7 @@ final class ConfigParserTests: XCTestCase {
 
     func testParsesRequiredInclude() {
         let parsed = ConfigParser.parse("config-file = themes/extra.ghostty\n")
-        guard case .include(let inc) = parsed.entries.first else { return XCTFail() }
+        guard case let .include(inc) = parsed.entries.first else { return XCTFail() }
         XCTAssertFalse(inc.isOptional)
         XCTAssertEqual(inc.path, "themes/extra.ghostty")
     }
@@ -77,7 +77,7 @@ final class ConfigParserTests: XCTestCase {
     func testParsesQuotedIncludePath() {
         // `"?literal"` should be a literal path starting with `?`, not optional.
         let parsed = ConfigParser.parse("config-file = \"?literal\"\n")
-        guard case .include(let inc) = parsed.entries.first else { return XCTFail() }
+        guard case let .include(inc) = parsed.entries.first else { return XCTFail() }
         XCTAssertFalse(inc.isOptional)
         XCTAssertEqual(inc.path, "?literal")
     }
@@ -85,7 +85,7 @@ final class ConfigParserTests: XCTestCase {
     func testSplitsOnFirstEqualsForKeybinds() {
         // keybind values contain `=` — Ghostty splits on the FIRST `=` only.
         let parsed = ConfigParser.parse("keybind = ctrl+a=copy_to_clipboard\n")
-        guard case .kv(let kv) = parsed.entries.first else { return XCTFail() }
+        guard case let .kv(kv) = parsed.entries.first else { return XCTFail() }
         XCTAssertEqual(kv.key, "keybind")
         XCTAssertEqual(kv.value, "ctrl+a=copy_to_clipboard")
     }
@@ -95,7 +95,7 @@ final class ConfigParserTests: XCTestCase {
         // so a save doesn't silently drop user content.
         let source = "not a real config line\n"
         let parsed = ConfigParser.parse(source)
-        guard case .comment(let raw) = parsed.entries.first else {
+        guard case let .comment(raw) = parsed.entries.first else {
             return XCTFail("expected malformed line preserved as comment-shaped entry")
         }
         XCTAssertEqual(raw, "not a real config line")

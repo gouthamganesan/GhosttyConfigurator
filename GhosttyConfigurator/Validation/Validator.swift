@@ -1,5 +1,5 @@
-import Foundation
 import AppKit
+import Foundation
 
 /// Pure-function lint over the current config file. Returns a dictionary keyed
 /// by Ghostty docKey (e.g. "theme", "font-family") so views can pull issues
@@ -18,19 +18,23 @@ enum Validator {
         var issues: [String: ValidationIssue] = [:]
 
         // MARK: Theme
+
         if let themeRaw = file.scalarValue(for: "theme"),
            !themeRaw.isEmpty,
            let knownThemes,
-           let issue = themeIssue(themeRaw, knownThemes: knownThemes) {
+           let issue = themeIssue(themeRaw, knownThemes: knownThemes)
+        {
             issues["theme"] = issue
         }
 
         // MARK: Font family — only check the first entry (the primary).
+
         // Fallback chain entries are advisory and tolerated by Ghostty.
         if let primary = file.listValues(for: "font-family").first,
            !primary.isEmpty,
            !knownFontFamilies.contains(primary),
-           !knownFontFamilies.contains(primary.trimmingCharacters(in: .whitespaces)) {
+           !knownFontFamilies.contains(primary.trimmingCharacters(in: .whitespaces))
+        {
             issues["font-family"] = .init(
                 severity: .warning,
                 message: "Font \"\(primary)\" isn't installed on this system. Ghostty will fall back to a built-in monospace face."
@@ -38,8 +42,10 @@ enum Validator {
         }
 
         // MARK: font-size — Ghostty rejects ≤ 0 and treats > 96 as a typo.
+
         if let raw = file.scalarValue(for: "font-size"),
-           let value = Double(raw) {
+           let value = Double(raw)
+        {
             if value <= 0 {
                 issues["font-size"] = .init(
                     severity: .error,
@@ -54,9 +60,11 @@ enum Validator {
         }
 
         // MARK: background-opacity — 0 makes the terminal invisible.
+
         if let raw = file.scalarValue(for: "background-opacity"),
            let value = Double(raw),
-           value <= 0 {
+           value <= 0
+        {
             issues["background-opacity"] = .init(
                 severity: .warning,
                 message: "Background opacity of 0 hides the terminal entirely. Use 0.1 or higher to keep text visible."
@@ -64,9 +72,11 @@ enum Validator {
         }
 
         // MARK: minimum-contrast — Ghostty clamps to [1.0, 21.0]. Flag anything outside.
+
         if let raw = file.scalarValue(for: "minimum-contrast"),
            let value = Double(raw),
-           value < 1.0 || value > 21.0 {
+           value < 1.0 || value > 21.0
+        {
             issues["minimum-contrast"] = .init(
                 severity: .warning,
                 message: "Minimum contrast must be between 1.0 and 21.0. Ghostty will clamp out-of-range values."
@@ -74,17 +84,21 @@ enum Validator {
         }
 
         // MARK: command — if the value contains a path, check the file exists.
+
         if let cmd = file.scalarValue(for: "command"),
            !cmd.isEmpty,
-           let issue = commandIssue(cmd) {
+           let issue = commandIssue(cmd)
+        {
             issues["command"] = issue
         }
 
         // MARK: working-directory — must exist if specified (and not "inherit").
+
         if let cwd = file.scalarValue(for: "working-directory"),
            !cwd.isEmpty,
            cwd != "inherit",
-           let issue = workingDirectoryIssue(cwd) {
+           let issue = workingDirectoryIssue(cwd)
+        {
             issues["working-directory"] = issue
         }
 
@@ -102,7 +116,7 @@ enum Validator {
                 guard let colonIdx = trimmedPart.firstIndex(of: ":") else { continue }
                 let name = stripQuotes(String(trimmedPart[trimmedPart.index(after: colonIdx)...]))
                     .trimmingCharacters(in: .whitespaces)
-                if !name.isEmpty && !knownThemes.contains(name) {
+                if !name.isEmpty, !knownThemes.contains(name) {
                     missing.append(name)
                 }
             }
@@ -156,7 +170,7 @@ enum Validator {
     private static func stripQuotes(_ value: String) -> String {
         guard value.count >= 2,
               (value.first == "\"" && value.last == "\"")
-                || (value.first == "'" && value.last == "'")
+              || (value.first == "'" && value.last == "'")
         else { return value }
         return String(value.dropFirst().dropLast())
     }

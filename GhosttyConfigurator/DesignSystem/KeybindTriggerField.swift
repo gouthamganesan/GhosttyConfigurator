@@ -23,7 +23,7 @@ struct KeybindTriggerField: View {
                 shortcutGlyphs
             }
             Spacer(minLength: 0)
-            if !key.isEmpty && !isRecording {
+            if !key.isEmpty, !isRecording {
                 Button {
                     modifiers = []
                     key = ""
@@ -40,8 +40,10 @@ struct KeybindTriggerField: View {
         .frame(minWidth: 220, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .stroke(isRecording ? Color.accentColor : Color(NSColor.separatorColor),
-                        lineWidth: isRecording ? 2 : 0.5)
+                .stroke(
+                    isRecording ? Color.accentColor : Color(NSColor.separatorColor),
+                    lineWidth: isRecording ? 2 : 0.5
+                )
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .fill(Color(NSColor.controlBackgroundColor))
@@ -59,7 +61,7 @@ struct KeybindTriggerField: View {
                     modifiers = recorded.modifiers
                     key = recorded.key
                     isRecording = false
-                    return true       // consume the event
+                    return true // consume the event
                 }
                 return false
             }
@@ -82,16 +84,16 @@ struct KeybindTriggerField: View {
 
     private var displayKey: String {
         switch key {
-        case "up":     "↑"
-        case "down":   "↓"
-        case "left":   "←"
-        case "right":  "→"
-        case "enter":  "↩"
-        case "tab":    "⇥"
+        case "up": "↑"
+        case "down": "↓"
+        case "left": "←"
+        case "right": "→"
+        case "enter": "↩"
+        case "tab": "⇥"
         case "escape": "⎋"
-        case "space":  "␣"
+        case "space": "␣"
         case "delete", "backspace": "⌫"
-        default:       key
+        default: key
         }
     }
 
@@ -100,10 +102,10 @@ struct KeybindTriggerField: View {
     private func decode(event: NSEvent) -> (modifiers: Set<KeyModifier>, key: String)? {
         var mods: Set<KeyModifier> = []
         let flags = event.modifierFlags
-        if flags.contains(.shift)   { mods.insert(.shift) }
-        if flags.contains(.control) { mods.insert(.ctrl)  }
-        if flags.contains(.option)  { mods.insert(.alt)   }
-        if flags.contains(.command) { mods.insert(.cmd)   }
+        if flags.contains(.shift) { mods.insert(.shift) }
+        if flags.contains(.control) { mods.insert(.ctrl) }
+        if flags.contains(.option) { mods.insert(.alt) }
+        if flags.contains(.command) { mods.insert(.cmd) }
 
         // Special keys by keyCode → Ghostty name.
         if let special = specialKeyName(for: event.keyCode) {
@@ -120,19 +122,19 @@ struct KeybindTriggerField: View {
 
     private func specialKeyName(for keyCode: UInt16) -> String? {
         switch keyCode {
-        case 36:  "enter"        // return
-        case 48:  "tab"
-        case 49:  "space"
-        case 51:  "backspace"
-        case 53:  "escape"
-        case 117: "delete"        // forward delete
+        case 36: "enter" // return
+        case 48: "tab"
+        case 49: "space"
+        case 51: "backspace"
+        case 53: "escape"
+        case 117: "delete" // forward delete
         case 122: "f1"
         case 120: "f2"
-        case 99:  "f3"
+        case 99: "f3"
         case 118: "f4"
-        case 96:  "f5"
-        case 97:  "f6"
-        case 98:  "f7"
+        case 96: "f5"
+        case 97: "f6"
+        case 98: "f7"
         case 100: "f8"
         case 101: "f9"
         case 109: "f10"
@@ -146,7 +148,7 @@ struct KeybindTriggerField: View {
         case 121: "pgdn"
         case 115: "home"
         case 119: "end"
-        default:  nil
+        default: nil
         }
     }
 }
@@ -173,10 +175,14 @@ private struct KeyEventCatcher: NSViewRepresentable {
 
     private final class KeyCatcherView: NSView {
         var onKey: (NSEvent) -> Bool = { _ in false }
-        override var acceptsFirstResponder: Bool { true }
+        override var acceptsFirstResponder: Bool {
+            true
+        }
+
         override func keyDown(with event: NSEvent) {
             if !onKey(event) { super.keyDown(with: event) }
         }
+
         override func performKeyEquivalent(with event: NSEvent) -> Bool {
             onKey(event)
         }

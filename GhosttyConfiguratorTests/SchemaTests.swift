@@ -1,5 +1,5 @@
-import XCTest
 @testable import GhosttyConfigurator
+import XCTest
 
 final class SchemaTests: XCTestCase {
     func testParsesCommentBlockThenKey() {
@@ -13,8 +13,10 @@ final class SchemaTests: XCTestCase {
         """
         let entries = SchemaStore.parse(input)
         XCTAssertEqual(entries["font-family"]?.defaultValue, "JetBrains Mono")
-        XCTAssertEqual(entries["font-family"]?.docs,
-                       "The font families to use. Generate with `ghostty +list-fonts`.")
+        XCTAssertEqual(
+            entries["font-family"]?.docs,
+            "The font families to use. Generate with `ghostty +list-fonts`."
+        )
         XCTAssertEqual(entries["cursor-style"]?.defaultValue, "block")
         XCTAssertEqual(entries["cursor-style"]?.docs, "Cursor style.")
     }
@@ -28,8 +30,10 @@ final class SchemaTests: XCTestCase {
         font-size = 13
         """
         let entries = SchemaStore.parse(input)
-        XCTAssertEqual(entries["font-size"]?.docs,
-                       "First paragraph line 1. First paragraph line 2.\n\nSecond paragraph.")
+        XCTAssertEqual(
+            entries["font-size"]?.docs,
+            "First paragraph line 1. First paragraph line 2.\n\nSecond paragraph."
+        )
     }
 
     func testEmptyDefaultValue() {
@@ -57,8 +61,11 @@ final class SchemaTests: XCTestCase {
         let output = String(decoding: data, as: UTF8.self)
 
         let entries = SchemaStore.parse(output)
-        XCTAssertGreaterThan(entries.count, 100,
-                             "Expected the real Ghostty schema to expose >100 keys; got \(entries.count)")
+        XCTAssertGreaterThan(
+            entries.count,
+            100,
+            "Expected the real Ghostty schema to expose >100 keys; got \(entries.count)"
+        )
         for key in ["font-family", "font-size", "background", "theme", "cursor-style"] {
             XCTAssertNotNil(entries[key], "Missing expected key '\(key)' in real schema")
         }

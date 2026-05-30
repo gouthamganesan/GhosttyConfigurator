@@ -1,5 +1,5 @@
-import XCTest
 @testable import GhosttyConfigurator
+import XCTest
 
 final class ThemeImportTests: XCTestCase {
     private var tempDir: URL!
@@ -19,7 +19,8 @@ final class ThemeImportTests: XCTestCase {
     func testImportsITermColorsIntoGhosttyTheme() throws {
         let bundle = Bundle(for: type(of: self))
         guard let fixtureURL = bundle.url(forResource: "sample", withExtension: "itermcolors")
-            ?? bundle.url(forResource: "sample", withExtension: "itermcolors", subdirectory: "Fixtures") else {
+            ?? bundle.url(forResource: "sample", withExtension: "itermcolors", subdirectory: "Fixtures")
+        else {
             return XCTFail("sample.itermcolors not in test bundle")
         }
 
@@ -40,8 +41,11 @@ final class ThemeImportTests: XCTestCase {
         let file = ConfigFile(parsed: parsed)
         XCTAssertEqual(file.scalarValue(for: "background"), "#1E1E2E")
         XCTAssertEqual(file.scalarValue(for: "cursor-color"), "#F5E0DC")
-        XCTAssertEqual(file.listValues(for: "palette").count, 2,
-                       "Expected the two palette entries we provided in the fixture")
+        XCTAssertEqual(
+            file.listValues(for: "palette").count,
+            2,
+            "Expected the two palette entries we provided in the fixture"
+        )
     }
 
     func testUnsupportedFormatThrows() {

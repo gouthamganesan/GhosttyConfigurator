@@ -44,7 +44,8 @@ struct AppearancePane: View {
                             HStack(spacing: 6) {
                                 Text("Theme")
                                 RowAffix(
-                                    modState: (store.themePair.single ?? "") != store.defaults.theme ? .modified : .unchanged,
+                                    modState: (store.themePair.single ?? "") != store.defaults
+                                        .theme ? .modified : .unchanged,
                                     docKey: "theme"
                                 )
                             }
@@ -55,22 +56,26 @@ struct AppearancePane: View {
             } header: {
                 Text("Theme")
             } footer: {
-                Text("Themes ship with Ghostty (~460 included) and can also live in `~/.config/ghostty/themes/`. The system-appearance pair writes `theme = light:X,dark:Y` and tracks your macOS appearance.")
+                Text(
+                    "Themes ship with Ghostty (~460 included) and can also live in `~/.config/ghostty/themes/`. The system-appearance pair writes `theme = light:X,dark:Y` and tracks your macOS appearance."
+                )
             }
 
             Section {
                 LabeledContent {
                     SystemSettingsSlider(
                         value: $store.backgroundOpacity,
-                        range: 0...1,
+                        range: 0 ... 1,
                         leadingLabel: "Transparent",
                         trailingLabel: "Opaque"
                     )
                     .frame(width: 240)
                 } label: {
-                    rowLabel("Background opacity",
-                             modified: store.isModified(\.backgroundOpacity, default: store.defaults.backgroundOpacity),
-                             docKey: "background-opacity")
+                    rowLabel(
+                        "Background opacity",
+                        modified: store.isModified(\.backgroundOpacity, default: store.defaults.backgroundOpacity),
+                        docKey: "background-opacity"
+                    )
                 }
 
                 LabeledContent {
@@ -79,14 +84,18 @@ struct AppearancePane: View {
                     }
                     .labelsHidden().pickerStyle(.menu).fixedSize()
                 } label: {
-                    rowLabel("Background blur",
-                             modified: store.isModified(\.backgroundBlur, default: store.defaults.backgroundBlur),
-                             docKey: "background-blur")
+                    rowLabel(
+                        "Background blur",
+                        modified: store.isModified(\.backgroundBlur, default: store.defaults.backgroundBlur),
+                        docKey: "background-blur"
+                    )
                 }
             } header: {
                 Text("Window")
             } footer: {
-                Text("Background blur and opacity apply behind the terminal contents; they don't affect text color. Opacity changes require a full Ghostty restart on macOS.")
+                Text(
+                    "Background blur and opacity apply behind the terminal contents; they don't affect text color. Opacity changes require a full Ghostty restart on macOS."
+                )
             }
 
             Section {
@@ -94,18 +103,22 @@ struct AppearancePane: View {
                     ColorPicker("", selection: $store.backgroundColor, supportsOpacity: false)
                         .labelsHidden()
                 } label: {
-                    rowLabel("Background",
-                             modified: store.isBackgroundColorModified,
-                             docKey: "background")
+                    rowLabel(
+                        "Background",
+                        modified: store.isBackgroundColorModified,
+                        docKey: "background"
+                    )
                 }
 
                 LabeledContent {
                     ColorPicker("", selection: $store.foregroundColor, supportsOpacity: false)
                         .labelsHidden()
                 } label: {
-                    rowLabel("Foreground",
-                             modified: store.isForegroundColorModified,
-                             docKey: "foreground")
+                    rowLabel(
+                        "Foreground",
+                        modified: store.isForegroundColorModified,
+                        docKey: "foreground"
+                    )
                 }
 
                 autoColorRow(
@@ -141,33 +154,41 @@ struct AppearancePane: View {
                         }
                     }
                 } label: {
-                    rowLabel("Bold color",
-                             modified: store.boldColorMode != store.defaults.boldColorMode,
-                             docKey: "bold-color")
+                    rowLabel(
+                        "Bold color",
+                        modified: store.boldColorMode != store.defaults.boldColorMode,
+                        docKey: "bold-color"
+                    )
                 }
 
                 LabeledContent {
                     SystemSettingsSlider(
                         value: $store.minimumContrast,
-                        range: 1.0...21.0,
+                        range: 1.0 ... 21.0,
                         leadingLabel: "1.0",
                         trailingLabel: "21.0"
                     )
                     .frame(width: 240)
                 } label: {
-                    rowLabel("Minimum contrast",
-                             modified: store.isModified(\.minimumContrast, default: store.defaults.minimumContrast),
-                             docKey: "minimum-contrast")
+                    rowLabel(
+                        "Minimum contrast",
+                        modified: store.isModified(\.minimumContrast, default: store.defaults.minimumContrast),
+                        docKey: "minimum-contrast"
+                    )
                 }
             } header: {
                 Text("Colors")
             } footer: {
-                Text("Colors override the active theme. Choose **Auto** to follow the theme. Minimum contrast forces a foreground/background contrast ratio (1.0 = no enforcement, 21.0 = maximum).")
+                Text(
+                    "Colors override the active theme. Choose **Auto** to follow the theme. Minimum contrast forces a foreground/background contrast ratio (1.0 = no enforcement, 21.0 = maximum)."
+                )
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(title: "Appearance",
-                     subtitle: "Colors, themes, and visual feel.")
+        .paneToolbar(
+            title: "Appearance",
+            subtitle: "Colors, themes, and visual feel."
+        )
         .navigationDestination(for: ThemeBrowserMode.self) { mode in
             ThemeBrowserView(mode: mode)
         }
@@ -178,7 +199,6 @@ struct AppearancePane: View {
     /// Row with an "Auto" toggle that controls whether the key is present.
     /// When Auto is on, the ColorPicker is hidden; flipping Auto off seeds
     /// the key with a fallback color so the picker has something to display.
-    @ViewBuilder
     private func autoColorRow(
         title: String,
         docKey: String,

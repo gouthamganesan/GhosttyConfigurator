@@ -48,7 +48,7 @@ struct FontPickerButton: View {
             // Best-effort resolve of the current font. If the named family
             // isn't installed, fall back to the system monospaced font so
             // the panel still opens at a sensible starting point.
-            let font: NSFont = NSFont(name: currentFamily, size: currentSize)
+            let font = NSFont(name: currentFamily, size: currentSize)
                 ?? .monospacedSystemFont(ofSize: currentSize, weight: .regular)
             FontPickerCoordinator.shared.present(currentFont: font) { picked in
                 let familyName = picked.familyName ?? picked.fontName

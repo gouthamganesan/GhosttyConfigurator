@@ -18,7 +18,10 @@ final class FileWatcher: @unchecked Sendable {
         AsyncStream { continuation in
             let fd = open(url.path, O_EVTONLY)
             guard fd >= 0 else {
-                Logger.watcher.error("open(O_EVTONLY) failed for \(url.path, privacy: .public): \(String(cString: strerror(errno)))")
+                Logger.watcher
+                    .error(
+                        "open(O_EVTONLY) failed for \(url.path, privacy: .public): \(String(cString: strerror(errno)))"
+                    )
                 continuation.finish()
                 return
             }

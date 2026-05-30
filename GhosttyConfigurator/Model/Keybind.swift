@@ -12,14 +12,16 @@ import Foundation
 /// Phase 5 scope: single-chord triggers with prefix support. Chord sequences
 /// (the `>` syntax) are parsed but presented to the user as opaque "advanced"
 /// rows that the editor doesn't try to modify.
-struct Keybind: Hashable, Sendable, Identifiable {
+struct Keybind: Hashable, Identifiable {
     /// Stable identifier so SwiftUI lists can diff. Uses the trigger string —
     /// trigger uniqueness is enforced by Ghostty itself (later wins).
-    var id: String { rawTrigger }
+    var id: String {
+        rawTrigger
+    }
 
     var prefixes: Set<TriggerPrefix>
     var modifiers: Set<KeyModifier>
-    var key: String                 // canonical key name (e.g. "c", "f5", "up")
+    var key: String // canonical key name (e.g. "c", "f5", "up")
     /// Original right-hand side of the trigger, preserved for chord sequences
     /// and edge cases the structured fields don't represent. When `isSimple`,
     /// modifiers + key are authoritative.
@@ -34,36 +36,40 @@ struct Keybind: Hashable, Sendable, Identifiable {
     }
 }
 
-enum TriggerPrefix: String, CaseIterable, Hashable, Sendable, Identifiable {
+enum TriggerPrefix: String, CaseIterable, Hashable, Identifiable {
     case all
     case global
     case unconsumed
     case performable
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var label: String {
         switch self {
-        case .all:         "All surfaces"
-        case .global:      "System-wide (macOS)"
-        case .unconsumed:  "Send to app too"
+        case .all: "All surfaces"
+        case .global: "System-wide (macOS)"
+        case .unconsumed: "Send to app too"
         case .performable: "Only if applicable"
         }
     }
 }
 
-enum KeyModifier: String, CaseIterable, Hashable, Sendable, Identifiable {
+enum KeyModifier: String, CaseIterable, Hashable, Identifiable {
     case shift, ctrl, alt, cmd
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     /// Glyph rendered in shortcut chips — matches macOS HIG.
     var glyph: String {
         switch self {
         case .shift: "⇧"
-        case .ctrl:  "⌃"
-        case .alt:   "⌥"
-        case .cmd:   "⌘"
+        case .ctrl: "⌃"
+        case .alt: "⌥"
+        case .cmd: "⌘"
         }
     }
 
@@ -71,39 +77,39 @@ enum KeyModifier: String, CaseIterable, Hashable, Sendable, Identifiable {
     var configToken: String {
         switch self {
         case .shift: "shift"
-        case .ctrl:  "ctrl"
-        case .alt:   "alt"
-        case .cmd:   "cmd"
+        case .ctrl: "ctrl"
+        case .alt: "alt"
+        case .cmd: "cmd"
         }
     }
 
     /// All token aliases Ghostty accepts; we read them all, emit the canonical.
     static func parse(token: String) -> KeyModifier? {
         switch token.lowercased() {
-        case "shift":                     .shift
-        case "ctrl", "control":           .ctrl
-        case "alt", "opt", "option":      .alt
-        case "cmd", "command", "super":   .cmd
-        default:                          nil
+        case "shift": .shift
+        case "ctrl", "control": .ctrl
+        case "alt", "opt", "option": .alt
+        case "cmd", "command", "super": .cmd
+        default: nil
         }
     }
 
     /// Sort order for stable rendering (matches macOS convention: ⌃⌥⇧⌘).
     var sortOrder: Int {
         switch self {
-        case .ctrl:  0
-        case .alt:   1
+        case .ctrl: 0
+        case .alt: 1
         case .shift: 2
-        case .cmd:   3
+        case .cmd: 3
         }
     }
 }
 
 /// Parsed action: verb + optional parameter. The verb is the canonical
 /// snake_case identifier from Ghostty (e.g. `copy_to_clipboard`).
-struct KeybindAction: Hashable, Sendable {
+struct KeybindAction: Hashable {
     var verb: String
-    var parameter: String?           // nil for actions without a param
+    var parameter: String? // nil for actions without a param
 
     /// `verb` or `verb:parameter` — the form Ghostty writes.
     var serialized: String {
@@ -122,11 +128,11 @@ struct KeybindAction: Hashable, Sendable {
     init(parsing raw: String) {
         // Split on FIRST `:` since some params (csi, esc, text) may include `:`.
         if let colon = raw.firstIndex(of: ":") {
-            self.verb = String(raw[..<colon])
-            self.parameter = String(raw[raw.index(after: colon)...])
+            verb = String(raw[..<colon])
+            parameter = String(raw[raw.index(after: colon)...])
         } else {
-            self.verb = raw
-            self.parameter = nil
+            verb = raw
+            parameter = nil
         }
     }
 }
@@ -161,11 +167,10 @@ enum KeybindParser {
 
         // Parse the chord (may contain `>` for sequences — we capture rawTrigger
         // but only decompose the first chord into modifiers+key for editing).
-        let firstChord: String
-        if let arrow = working.firstIndex(of: ">") {
-            firstChord = String(working[..<arrow])
+        let firstChord: String = if let arrow = working.firstIndex(of: ">") {
+            String(working[..<arrow])
         } else {
-            firstChord = working
+            working
         }
 
         let parts = firstChord.split(separator: "+").map { String($0) }
@@ -202,11 +207,11 @@ enum KeybindParser {
         }
 
         let triggerPart: String
-        if keybind.isSimple && !keybind.rawTrigger.contains(">") {
+        if keybind.isSimple, !keybind.rawTrigger.contains(">") {
             // Rebuild from structured fields so user edits land.
             let mods = keybind.modifiers
                 .sorted { $0.sortOrder < $1.sortOrder }
-                .map { $0.configToken }
+                .map(\.configToken)
             triggerPart = (mods + [keybind.key]).joined(separator: "+")
         } else {
             triggerPart = keybind.rawTrigger

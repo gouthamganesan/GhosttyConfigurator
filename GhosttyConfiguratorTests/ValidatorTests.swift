@@ -1,5 +1,5 @@
-import XCTest
 @testable import GhosttyConfigurator
+import XCTest
 
 final class ValidatorTests: XCTestCase {
     private let installedFonts: Set<String> = ["JetBrains Mono", "Geist Mono", "Menlo"]

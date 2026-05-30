@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 /// Parse Ghostty's color literal forms into a SwiftUI `Color`, and serialize
 /// a SwiftUI `Color` back into the canonical `#RRGGBB` form Ghostty writes.
@@ -13,11 +13,13 @@ enum ColorParsing {
     /// callers should fall back to a default rather than crash.
     static func color(from raw: String) -> Color? {
         guard let rgb = rgbComponents(from: raw) else { return nil }
-        return Color(.sRGB,
-                     red: Double(rgb.r) / 255.0,
-                     green: Double(rgb.g) / 255.0,
-                     blue: Double(rgb.b) / 255.0,
-                     opacity: 1.0)
+        return Color(
+            .sRGB,
+            red: Double(rgb.r) / 255.0,
+            green: Double(rgb.g) / 255.0,
+            blue: Double(rgb.b) / 255.0,
+            opacity: 1.0
+        )
     }
 
     /// Decompose into 0…255 RGB triple. Useful for luminance calculations
@@ -57,9 +59,11 @@ enum ColorParsing {
         let r = Int(round(ns.redComponent * 255))
         let g = Int(round(ns.greenComponent * 255))
         let b = Int(round(ns.blueComponent * 255))
-        return String(format: "#%02X%02X%02X",
-                      max(0, min(255, r)),
-                      max(0, min(255, g)),
-                      max(0, min(255, b)))
+        return String(
+            format: "#%02X%02X%02X",
+            max(0, min(255, r)),
+            max(0, min(255, g)),
+            max(0, min(255, b))
+        )
     }
 }

@@ -35,21 +35,21 @@ struct ValidationBadge: View {
     private var symbolName: String {
         switch issue.severity {
         case .warning: "exclamationmark.triangle.fill"
-        case .error:   "exclamationmark.octagon.fill"
+        case .error: "exclamationmark.octagon.fill"
         }
     }
 
     private var tint: Color {
         switch issue.severity {
         case .warning: .yellow
-        case .error:   .red
+        case .error: .red
         }
     }
 
     private var titleText: String {
         switch issue.severity {
         case .warning: "Heads up"
-        case .error:   "Invalid value"
+        case .error: "Invalid value"
         }
     }
 }

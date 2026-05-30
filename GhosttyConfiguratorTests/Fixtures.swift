@@ -8,7 +8,8 @@ enum Fixtures {
     static func string(_ name: String, file: StaticString = #filePath, line: UInt = #line) throws -> String {
         let bundle = Bundle(for: FixturesAnchor.self)
         guard let url = bundle.url(forResource: name, withExtension: "ghostty", subdirectory: "Fixtures")
-            ?? bundle.url(forResource: name, withExtension: "ghostty") else {
+            ?? bundle.url(forResource: name, withExtension: "ghostty")
+        else {
             XCTFail("Fixture \(name).ghostty not found in test bundle", file: file, line: line)
             throw FixtureError.notFound(name)
         }

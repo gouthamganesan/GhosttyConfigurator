@@ -16,12 +16,13 @@ enum DocOverrides {
         let link: URL?
     }
 
-    static func lookup(_ key: String) -> Entry? { table[key] }
+    static func lookup(_ key: String) -> Entry? {
+        table[key]
+    }
 
     // MARK: - Table
 
     private static let table: [String: Entry] = [
-
         // MARK: OpenType — per-feature
 
         "font-feature (+/-liga)": Entry(

@@ -95,13 +95,13 @@ actor ThemeLibrary {
     /// Build a `Theme` from a parsed theme file. Missing palette indices
     /// fall back to a sensible default — same byte every consumer can index
     /// safely on `theme.palette[i]`.
-    nonisolated private func makeTheme(from file: ConfigFile, ref: ThemeRef) -> Theme {
+    private nonisolated func makeTheme(from file: ConfigFile, ref: ThemeRef) -> Theme {
         var palette = Array(repeating: "#000000", count: 16)
         for entry in file.parsed.entries {
-            guard case .kv(let kv) = entry, kv.key == "palette" else { continue }
+            guard case let .kv(kv) = entry, kv.key == "palette" else { continue }
             // Value is `INDEX=#HEX` — split once on `=`.
             let parts = kv.value.split(separator: "=", maxSplits: 1).map(String.init)
-            guard parts.count == 2, let idx = Int(parts[0]), (0..<16).contains(idx) else { continue }
+            guard parts.count == 2, let idx = Int(parts[0]), (0 ..< 16).contains(idx) else { continue }
             palette[idx] = parts[1]
         }
 

@@ -26,12 +26,15 @@ struct ReloadToolbarButton: View {
         }
         .help(helpText)
         .disabled(!store.ghosttyInstalled)
-        .alert("Couldn't reload Ghostty",
-               isPresented: $showErrorAlert,
-               presenting: lastError) { _ in
+        .alert(
+            "Couldn't reload Ghostty",
+            isPresented: $showErrorAlert,
+            presenting: lastError
+        ) { _ in
             Button("OK", role: .cancel) {}
         } message: { error in
-            Text(error + "\n\nThe configurator wrote your changes to the config file. To apply them, focus Ghostty and press ⌘⇧, manually.")
+            Text(error +
+                "\n\nThe configurator wrote your changes to the config file. To apply them, focus Ghostty and press ⌘⇧, manually.")
         }
     }
 

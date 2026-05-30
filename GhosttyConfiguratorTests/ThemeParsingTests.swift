@@ -1,5 +1,5 @@
-import XCTest
 @testable import GhosttyConfigurator
+import XCTest
 
 final class ThemeParsingTests: XCTestCase {
     // MARK: - ColorParsing

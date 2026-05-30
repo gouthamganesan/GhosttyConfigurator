@@ -26,6 +26,7 @@ actor ConfigFileIO {
     func read() async throws -> ConfigFile {
         let fm = FileManager.default
         guard fm.fileExists(atPath: fileURL.path) else {
+            // swiftformat:disable:next redundantSelf
             Logger.parser.info("config file not found at \(self.fileURL.path, privacy: .public); using empty")
             return .empty
         }
@@ -63,6 +64,7 @@ actor ConfigFileIO {
         }
 
         lastSavedHash = source.hashValue
+        // swiftformat:disable:next redundantSelf
         Logger.parser.info("wrote \(data.count) bytes to \(self.fileURL.path, privacy: .public)")
     }
 

@@ -51,15 +51,15 @@ struct TerminalPreview: View {
             Text("drwxr-xr-x  6 you  staff   192 May 27 09:00 ")
                 .foregroundStyle(color(8)) +
                 Text(".")
-                    .foregroundStyle(color(4))
+                .foregroundStyle(color(4))
             Text("-rw-r--r--  1 you  staff  1.2K May 27 09:00 ")
                 .foregroundStyle(color(8)) +
                 Text("README.md")
-                    .foregroundStyle(fg)
+                .foregroundStyle(fg)
             Text("-rwxr-xr-x  1 you  staff   24K May 27 09:00 ")
                 .foregroundStyle(color(8)) +
                 Text("build.sh")
-                    .foregroundStyle(color(2))
+                .foregroundStyle(color(2))
         }
         .font(termFont)
     }
@@ -67,8 +67,8 @@ struct TerminalPreview: View {
     private var codeBlock: some View {
         // bat-style highlighting: heading=blue, string=yellow, comment=green.
         VStack(alignment: .leading, spacing: 1) {
-            (Text("# ").foregroundStyle(color(4)) +
-             Text("Ghostty Configurator").foregroundStyle(fg).bold())
+            Text("# ").foregroundStyle(color(4)) +
+                Text("Ghostty Configurator").foregroundStyle(fg).bold()
             Text("Native macOS GUI for Ghostty config.")
                 .foregroundStyle(fg)
             Text("> Status: ").foregroundStyle(color(2)) +
@@ -102,8 +102,14 @@ struct TerminalPreview: View {
 
     // MARK: - Color helpers
 
-    private var bg: Color { ColorParsing.color(from: theme.background) ?? .black }
-    private var fg: Color { ColorParsing.color(from: theme.foreground) ?? .white }
+    private var bg: Color {
+        ColorParsing.color(from: theme.background) ?? .black
+    }
+
+    private var fg: Color {
+        ColorParsing.color(from: theme.foreground) ?? .white
+    }
+
     private var cursor: Color {
         if let c = theme.cursorColor { return ColorParsing.color(from: c) ?? fg }
         return fg

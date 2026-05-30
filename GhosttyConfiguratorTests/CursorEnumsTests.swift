@@ -1,11 +1,10 @@
-import XCTest
 @testable import GhosttyConfigurator
+import XCTest
 
 /// Round-trip coverage for the Cursor pane enum migrations (B1):
 /// - `cursor-style-blink` Bool → tri-state enum (default / always / never)
 /// - `cursor-text` 4-state enum (default / cell-bg / cell-fg / custom)
 final class CursorEnumsTests: XCTestCase {
-
     // MARK: - cursor-style-blink
 
     func testBlinkRawValues() {

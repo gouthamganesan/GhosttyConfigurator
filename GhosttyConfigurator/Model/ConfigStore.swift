@@ -1,7 +1,7 @@
 import Foundation
 import Observation
-import SwiftUI
 import os
+import SwiftUI
 
 /// Single source of truth for the user-facing config. Backed by a real on-disk
 /// Ghostty config file via `ConfigFileIO`.
@@ -28,13 +28,12 @@ final class ConfigStore {
     // Validation caches. `knownThemes` is nil until the theme index loads —
     // the validator skips theme checks in that state so it doesn't false-flag.
     private(set) var knownThemes: Set<String>?
-    @ObservationIgnored private(set) lazy var knownFontFamilies: Set<String> = {
-        Set(NSFontManager.shared.availableFontFamilies)
-    }()
+    @ObservationIgnored private(set) lazy var knownFontFamilies: Set<String> = Set(NSFontManager.shared
+        .availableFontFamilies)
 
     // MARK: - Defaults
 
-    struct Defaults: Sendable {
+    struct Defaults {
         // Appearance
         let theme: String = "Catppuccin Mocha"
         let backgroundOpacity: Double = 1.0
@@ -46,7 +45,7 @@ final class ConfigStore {
         let backgroundColor: Color = .black
         let foregroundColor: Color = .white
         let cursorColorFallback: Color = .white
-        let selectionBackgroundFallback: Color = Color(red: 0.20, green: 0.40, blue: 0.85)
+        let selectionBackgroundFallback: Color = .init(red: 0.20, green: 0.40, blue: 0.85)
         let selectionForegroundFallback: Color = .white
         let boldColorMode: BoldColorMode = .none
         let boldColorCustomFallback: Color = .white
@@ -142,8 +141,8 @@ final class ConfigStore {
 
     init(fileURL: URL = ConfigPaths.resolveExistingURL()) {
         self.fileURL = fileURL
-        self.io = ConfigFileIO(fileURL: fileURL)
-        self.ghosttyInstalled = ConfigPaths.ghosttyAppURL() != nil
+        io = ConfigFileIO(fileURL: fileURL)
+        ghosttyInstalled = ConfigPaths.ghosttyAppURL() != nil
     }
 
     // MARK: - Lifecycle
@@ -152,11 +151,12 @@ final class ConfigStore {
         do {
             let file = try await io.read()
             self.file = file
-            self.hasLoaded = true
+            hasLoaded = true
+            // swiftformat:disable:next redundantSelf
             Logger.store.info("loaded \(file.parsed.entries.count) entries from \(self.fileURL.path, privacy: .public)")
         } catch {
             Logger.store.error("load failed: \(String(describing: error), privacy: .public)")
-            self.hasLoaded = true
+            hasLoaded = true
         }
     }
 
@@ -164,13 +164,13 @@ final class ConfigStore {
     /// enumerates filenames in the theme directories — doesn't parse them).
     func loadThemeIndex() async {
         let refs = await ThemeLibrary.shared.index()
-        self.knownThemes = Set(refs.map(\.name))
+        knownThemes = Set(refs.map(\.name))
     }
 
     /// Shell out to `ghostty --version` once and cache the result for the
     /// About hero. Silent on failure — the About pane just hides the line.
     func loadGhosttyVersion() async {
-        self.ghosttyVersion = await Self.detectGhosttyVersion()
+        ghosttyVersion = await Self.detectGhosttyVersion()
     }
 
     private static func detectGhosttyVersion() async -> String {
@@ -211,7 +211,7 @@ final class ConfigStore {
         watcherTask = Task { [weak self, fileURL] in
             for await _ in FileWatcher.events(for: fileURL) {
                 guard let self else { return }
-                await self.handleExternalEdit()
+                await handleExternalEdit()
             }
         }
     }
@@ -280,14 +280,18 @@ final class ConfigStore {
         set { setScalar("background", value: ColorParsing.hexString(from: newValue), label: "Change Background Color") }
     }
 
-    var isBackgroundColorModified: Bool { file.scalarValue(for: "background") != nil }
+    var isBackgroundColorModified: Bool {
+        file.scalarValue(for: "background") != nil
+    }
 
     var foregroundColor: Color {
         get { file.color(for: "foreground") ?? defaults.foregroundColor }
         set { setScalar("foreground", value: ColorParsing.hexString(from: newValue), label: "Change Foreground Color") }
     }
 
-    var isForegroundColorModified: Bool { file.scalarValue(for: "foreground") != nil }
+    var isForegroundColorModified: Bool {
+        file.scalarValue(for: "foreground") != nil
+    }
 
     /// `cursor-color`, `selection-background`, `selection-foreground` —
     /// keys that follow the theme when absent. Use `isAuto*` to drive the
@@ -303,16 +307,22 @@ final class ConfigStore {
             if newValue {
                 deleteKey("cursor-color", label: "Reset Cursor Color")
             } else {
-                setScalar("cursor-color",
-                          value: ColorParsing.hexString(from: defaults.cursorColorFallback),
-                          label: "Set Cursor Color")
+                setScalar(
+                    "cursor-color",
+                    value: ColorParsing.hexString(from: defaults.cursorColorFallback),
+                    label: "Set Cursor Color"
+                )
             }
         }
     }
 
     var selectionBackgroundColor: Color {
         get { file.color(for: "selection-background") ?? defaults.selectionBackgroundFallback }
-        set { setScalar("selection-background", value: ColorParsing.hexString(from: newValue), label: "Change Selection Background") }
+        set { setScalar(
+            "selection-background",
+            value: ColorParsing.hexString(from: newValue),
+            label: "Change Selection Background"
+        ) }
     }
 
     var isSelectionBackgroundAuto: Bool {
@@ -321,16 +331,22 @@ final class ConfigStore {
             if newValue {
                 deleteKey("selection-background", label: "Reset Selection Background")
             } else {
-                setScalar("selection-background",
-                          value: ColorParsing.hexString(from: defaults.selectionBackgroundFallback),
-                          label: "Set Selection Background")
+                setScalar(
+                    "selection-background",
+                    value: ColorParsing.hexString(from: defaults.selectionBackgroundFallback),
+                    label: "Set Selection Background"
+                )
             }
         }
     }
 
     var selectionForegroundColor: Color {
         get { file.color(for: "selection-foreground") ?? defaults.selectionForegroundFallback }
-        set { setScalar("selection-foreground", value: ColorParsing.hexString(from: newValue), label: "Change Selection Foreground") }
+        set { setScalar(
+            "selection-foreground",
+            value: ColorParsing.hexString(from: newValue),
+            label: "Change Selection Foreground"
+        ) }
     }
 
     var isSelectionForegroundAuto: Bool {
@@ -339,9 +355,11 @@ final class ConfigStore {
             if newValue {
                 deleteKey("selection-foreground", label: "Reset Selection Foreground")
             } else {
-                setScalar("selection-foreground",
-                          value: ColorParsing.hexString(from: defaults.selectionForegroundFallback),
-                          label: "Set Selection Foreground")
+                setScalar(
+                    "selection-foreground",
+                    value: ColorParsing.hexString(from: defaults.selectionForegroundFallback),
+                    label: "Set Selection Foreground"
+                )
             }
         }
     }
@@ -360,9 +378,11 @@ final class ConfigStore {
                 // Only seed a default hex if there isn't already one — preserves
                 // the last-chosen custom color when toggling away and back.
                 if file.color(for: "bold-color") == nil {
-                    setScalar("bold-color",
-                              value: ColorParsing.hexString(from: defaults.boldColorCustomFallback),
-                              label: "Use Custom Bold Color")
+                    setScalar(
+                        "bold-color",
+                        value: ColorParsing.hexString(from: defaults.boldColorCustomFallback),
+                        label: "Use Custom Bold Color"
+                    )
                 }
             }
         }
@@ -387,7 +407,9 @@ final class ConfigStore {
     }
 
     var macosWindowButtons: MacosWindowButtons {
-        get { file.enumValue(MacosWindowButtons.self, for: "macos-window-buttons", default: defaults.macosWindowButtons) }
+        get {
+            file.enumValue(MacosWindowButtons.self, for: "macos-window-buttons", default: defaults.macosWindowButtons)
+        }
         set { setEnum("macos-window-buttons", newValue, label: "Change Window Buttons") }
     }
 
@@ -418,9 +440,11 @@ final class ConfigStore {
 
     var macosNonNativeFullscreen: MacosNonNativeFullscreen {
         get {
-            file.enumValue(MacosNonNativeFullscreen.self,
-                           for: "macos-non-native-fullscreen",
-                           default: defaults.macosNonNativeFullscreen)
+            file.enumValue(
+                MacosNonNativeFullscreen.self,
+                for: "macos-non-native-fullscreen",
+                default: defaults.macosNonNativeFullscreen
+            )
         }
         set { setEnum("macos-non-native-fullscreen", newValue, label: "Change Non-Native Fullscreen") }
     }
@@ -447,17 +471,27 @@ final class ConfigStore {
     }
 
     var macosTitlebarProxyIcon: MacosTitlebarProxyIcon {
-        get { file.enumValue(MacosTitlebarProxyIcon.self, for: "macos-titlebar-proxy-icon", default: defaults.macosTitlebarProxyIcon) }
+        get { file.enumValue(
+            MacosTitlebarProxyIcon.self,
+            for: "macos-titlebar-proxy-icon",
+            default: defaults.macosTitlebarProxyIcon
+        ) }
         set { setEnum("macos-titlebar-proxy-icon", newValue, label: "Change Titlebar Proxy Icon") }
     }
 
     var windowPaddingColor: WindowPaddingColor {
-        get { file.enumValue(WindowPaddingColor.self, for: "window-padding-color", default: defaults.windowPaddingColor) }
+        get {
+            file.enumValue(WindowPaddingColor.self, for: "window-padding-color", default: defaults.windowPaddingColor)
+        }
         set { setEnum("window-padding-color", newValue, label: "Change Padding Color") }
     }
 
     var windowNewTabPosition: WindowNewTabPosition {
-        get { file.enumValue(WindowNewTabPosition.self, for: "window-new-tab-position", default: defaults.windowNewTabPosition) }
+        get { file.enumValue(
+            WindowNewTabPosition.self,
+            for: "window-new-tab-position",
+            default: defaults.windowNewTabPosition
+        ) }
         set { setEnum("window-new-tab-position", newValue, label: "Change New Tab Position") }
     }
 
@@ -503,9 +537,11 @@ final class ConfigStore {
                 setScalar("cursor-text", value: "cell-foreground", label: "Use Cell Foreground for Cursor Text")
             case .custom:
                 if file.color(for: "cursor-text") == nil {
-                    setScalar("cursor-text",
-                              value: ColorParsing.hexString(from: defaults.cursorTextCustomFallback),
-                              label: "Use Custom Cursor Text Color")
+                    setScalar(
+                        "cursor-text",
+                        value: ColorParsing.hexString(from: defaults.cursorTextCustomFallback),
+                        label: "Use Custom Cursor Text Color"
+                    )
                 }
             }
         }
@@ -513,7 +549,9 @@ final class ConfigStore {
 
     var cursorTextCustom: Color {
         get { file.color(for: "cursor-text") ?? defaults.cursorTextCustomFallback }
-        set { setScalar("cursor-text", value: ColorParsing.hexString(from: newValue), label: "Change Cursor Text Color") }
+        set {
+            setScalar("cursor-text", value: ColorParsing.hexString(from: newValue), label: "Change Cursor Text Color")
+        }
     }
 
     var cursorOpacity: Double {
@@ -640,27 +678,48 @@ final class ConfigStore {
 
     var shellFeatureCursor: Bool {
         get { isShellFeatureEnabled("cursor", default: defaults.shellFeatureCursor) }
-        set { setCommaFlag("shell-integration-features", flag: "cursor", enabled: newValue, label: "Toggle Cursor Shape Integration") }
+        set { setCommaFlag(
+            "shell-integration-features",
+            flag: "cursor",
+            enabled: newValue,
+            label: "Toggle Cursor Shape Integration"
+        ) }
     }
 
     var shellFeatureSudo: Bool {
         get { isShellFeatureEnabled("sudo", default: defaults.shellFeatureSudo) }
-        set { setCommaFlag("shell-integration-features", flag: "sudo", enabled: newValue, label: "Toggle Sudo Quoting") }
+        set { setCommaFlag("shell-integration-features", flag: "sudo", enabled: newValue, label: "Toggle Sudo Quoting")
+        }
     }
 
     var shellFeatureTitle: Bool {
         get { isShellFeatureEnabled("title", default: defaults.shellFeatureTitle) }
-        set { setCommaFlag("shell-integration-features", flag: "title", enabled: newValue, label: "Toggle Title Integration") }
+        set { setCommaFlag(
+            "shell-integration-features",
+            flag: "title",
+            enabled: newValue,
+            label: "Toggle Title Integration"
+        ) }
     }
 
     var shellFeatureSshEnv: Bool {
         get { isShellFeatureEnabled("ssh-env", default: defaults.shellFeatureSshEnv) }
-        set { setCommaFlag("shell-integration-features", flag: "ssh-env", enabled: newValue, label: "Toggle SSH Env Forwarding") }
+        set { setCommaFlag(
+            "shell-integration-features",
+            flag: "ssh-env",
+            enabled: newValue,
+            label: "Toggle SSH Env Forwarding"
+        ) }
     }
 
     var shellFeatureSshTerminfo: Bool {
         get { isShellFeatureEnabled("ssh-terminfo", default: defaults.shellFeatureSshTerminfo) }
-        set { setCommaFlag("shell-integration-features", flag: "ssh-terminfo", enabled: newValue, label: "Toggle SSH Terminfo Forwarding") }
+        set { setCommaFlag(
+            "shell-integration-features",
+            flag: "ssh-terminfo",
+            enabled: newValue,
+            label: "Toggle SSH Terminfo Forwarding"
+        ) }
     }
 
     var shellCommand: String {
@@ -990,10 +1049,10 @@ final class ConfigStore {
         let snapshot = file
         persistTask = Task { [weak self] in
             guard let self else { return }
-            try? await Task.sleep(for: self.debounce)
+            try? await Task.sleep(for: debounce)
             guard !Task.isCancelled else { return }
             do {
-                try await self.io.write(snapshot)
+                try await io.write(snapshot)
             } catch {
                 Logger.store.error("persist failed: \(String(describing: error), privacy: .public)")
             }
@@ -1004,7 +1063,7 @@ final class ConfigStore {
         if await io.hasExternalChanges() {
             do {
                 let reloaded = try await io.read()
-                self.file = reloaded
+                file = reloaded
                 Logger.store.info("reloaded after external edit")
             } catch {
                 Logger.store.error("reload failed: \(String(describing: error), privacy: .public)")

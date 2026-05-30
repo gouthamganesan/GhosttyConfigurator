@@ -7,7 +7,7 @@ import Foundation
 /// `id` is a fresh UUID so SwiftUI ForEach can track rows through edits;
 /// equality intentionally ignores it (two rows with the same KEY/VALUE are
 /// considered equal for diffing purposes).
-struct EnvVar: Identifiable, Hashable, Sendable {
+struct EnvVar: Identifiable, Hashable {
     let id: UUID
     var key: String
     var value: String
@@ -39,5 +39,7 @@ struct EnvVar: Identifiable, Hashable, Sendable {
     }
 
     /// Serialize as the raw string Ghostty expects after `env = `.
-    var serialized: String { "\(key)=\(value)" }
+    var serialized: String {
+        "\(key)=\(value)"
+    }
 }

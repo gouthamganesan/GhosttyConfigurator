@@ -5,7 +5,9 @@ import Foundation
 struct SearchResult: Identifiable, Hashable {
     let row: SearchableRow
     let score: Int
-    var id: String { row.id }
+    var id: String {
+        row.id
+    }
 }
 
 enum SearchEngine {
@@ -81,7 +83,7 @@ enum SearchEngine {
         }
 
         // Bonus when the full query string appears verbatim in the title.
-        if terms.count > 1 && title.contains(query) {
+        if terms.count > 1, title.contains(query) {
             total += 50
         }
 
@@ -99,7 +101,7 @@ enum SearchEngine {
         var i = 0
         while i <= h.count - n.count {
             var match = true
-            for j in 0..<n.count where h[i + j] != n[j] {
+            for j in 0 ..< n.count where h[i + j] != n[j] {
                 match = false
                 break
             }
@@ -107,7 +109,7 @@ enum SearchEngine {
                 let leftOK = i == 0 || !h[i - 1].isLetter && !h[i - 1].isNumber
                 let rightEnd = i + n.count
                 let rightOK = rightEnd == h.count || !h[rightEnd].isLetter && !h[rightEnd].isNumber
-                if leftOK && rightOK { return true }
+                if leftOK, rightOK { return true }
             }
             i += 1
         }

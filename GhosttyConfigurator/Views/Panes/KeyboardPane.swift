@@ -13,10 +13,12 @@ struct KeyboardPane: View {
                             .foregroundStyle(.tertiary)
                         Text("No custom shortcuts yet")
                             .foregroundStyle(.secondary)
-                        Text("Ghostty's built-in shortcuts (⌘C copy, ⌘V paste, ⌘⇧, reload config…) work without any configuration. Add a shortcut here to override or extend them.")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
+                        Text(
+                            "Ghostty's built-in shortcuts (⌘C copy, ⌘V paste, ⌘⇧, reload config…) work without any configuration. Add a shortcut here to override or extend them."
+                        )
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                         NavigationLink(value: KeybindRoute.add) {
                             Text("Add Shortcut")
                                 .font(.body.weight(.medium))
@@ -46,7 +48,9 @@ struct KeyboardPane: View {
                 } header: {
                     Text("Custom shortcuts")
                 } footer: {
-                    Text("Tap a row to edit. Right-click for delete. Custom shortcuts override Ghostty's defaults for the same trigger.")
+                    Text(
+                        "Tap a row to edit. Right-click for delete. Custom shortcuts override Ghostty's defaults for the same trigger."
+                    )
                 }
             }
 
@@ -57,14 +61,16 @@ struct KeyboardPane: View {
             }
         }
         .formStyle(.grouped)
-        .paneToolbar(title: "Keyboard",
-                     subtitle: "Custom shortcuts and key bindings.")
+        .paneToolbar(
+            title: "Keyboard",
+            subtitle: "Custom shortcuts and key bindings."
+        )
         .navigationDestination(for: KeybindRoute.self) { route in
             KeybindEditorView(editing: route.editingKeybind) { keybind in
                 switch route {
                 case .add:
                     store.addKeybind(keybind)
-                case .edit(let old):
+                case let .edit(old):
                     store.replaceKeybind(old, with: keybind)
                 }
             }
@@ -78,8 +84,8 @@ enum KeybindRoute: Hashable {
 
     var editingKeybind: Keybind? {
         switch self {
-        case .add:        nil
-        case .edit(let k): k
+        case .add: nil
+        case let .edit(k): k
         }
     }
 }
@@ -155,16 +161,16 @@ private struct KeybindRow: View {
 
     private func displayKey(_ key: String) -> String {
         switch key {
-        case "up":     "↑"
-        case "down":   "↓"
-        case "left":   "←"
-        case "right":  "→"
-        case "enter":  "↩"
-        case "tab":    "⇥"
+        case "up": "↑"
+        case "down": "↓"
+        case "left": "←"
+        case "right": "→"
+        case "enter": "↩"
+        case "tab": "⇥"
         case "escape": "⎋"
-        case "space":  "␣"
+        case "space": "␣"
         case "delete", "backspace": "⌫"
-        default:       key
+        default: key
         }
     }
 }

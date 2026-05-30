@@ -23,7 +23,9 @@ struct DocTooltip: View {
         return key
     }
 
-    private var override: DocOverrides.Entry? { DocOverrides.lookup(key) }
+    private var override: DocOverrides.Entry? {
+        DocOverrides.lookup(key)
+    }
 
     var body: some View {
         Button {
@@ -51,13 +53,12 @@ struct DocTooltip: View {
         }
     }
 
-    @ViewBuilder
     private func overrideContent(_ entry: DocOverrides.Entry) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(entry.title)
                 .font(.headline)
 
-            Text(.init(entry.body))      // markdown-style **bold** + bullets
+            Text(.init(entry.body)) // markdown-style **bold** + bullets
                 .font(.callout)
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -70,7 +71,6 @@ struct DocTooltip: View {
         }
     }
 
-    @ViewBuilder
     private var schemaContent: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(lookupKey)
@@ -100,14 +100,18 @@ struct DocTooltip: View {
                     .foregroundStyle(.secondary)
                     .font(.callout)
             } else {
-                Text("No schema entry found for this key. It may have been removed in your Ghostty version, or this row maps to a friendly toggle that doesn't have a 1:1 key.")
-                    .foregroundStyle(.secondary)
-                    .font(.callout)
+                Text(
+                    "No schema entry found for this key. It may have been removed in your Ghostty version, or this row maps to a friendly toggle that doesn't have a 1:1 key."
+                )
+                .foregroundStyle(.secondary)
+                .font(.callout)
             }
 
-            Link("View in Ghostty docs ↗",
-                 destination: URL(string: "https://ghostty.org/docs/config/reference")!)
-                .font(.callout)
+            Link(
+                "View in Ghostty docs ↗",
+                destination: URL(string: "https://ghostty.org/docs/config/reference")!
+            )
+            .font(.callout)
         }
     }
 }
