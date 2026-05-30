@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Theme browser — the killer feature. Grid of every available theme with a
 /// live `TerminalPreview` of the focused one. Tapping a tile selects it;
@@ -113,8 +114,9 @@ struct ThemeBrowserView: View {
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
-        panel.allowedContentTypes = []
-        panel.allowedFileTypes = ["itermcolors"]
+        if let itermcolors = UTType(filenameExtension: "itermcolors") {
+            panel.allowedContentTypes = [itermcolors]
+        }
         panel.message = "Choose an iTerm2 .itermcolors file to import"
         guard panel.runModal() == .OK, let url = panel.url else { return }
 

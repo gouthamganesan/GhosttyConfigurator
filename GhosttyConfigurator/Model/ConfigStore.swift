@@ -764,7 +764,9 @@ final class ConfigStore {
             .map(\.serialized)
         guard priorValues != serialized else { return }
         undoManager?.registerUndo(withTarget: self) { store in
-            store.applyEnvVarsUndo(priorValues, label: "Edit Environment Variables")
+            MainActor.assumeIsolated {
+                store.applyEnvVarsUndo(priorValues, label: "Edit Environment Variables")
+            }
         }
         undoManager?.setActionName("Edit Environment Variables")
         file.setList("env", values: serialized)
@@ -964,7 +966,9 @@ final class ConfigStore {
         newValues.append(KeybindParser.serialize(keybind))
 
         undoManager?.registerUndo(withTarget: self) { store in
-            store.replaceKeybindList(priorValues, label: "Add Shortcut")
+            MainActor.assumeIsolated {
+                store.replaceKeybindList(priorValues, label: "Add Shortcut")
+            }
         }
         undoManager?.setActionName("Add Shortcut")
         file.setList("keybind", values: newValues)
@@ -978,7 +982,9 @@ final class ConfigStore {
         guard newValues.count != priorValues.count else { return }
 
         undoManager?.registerUndo(withTarget: self) { store in
-            store.replaceKeybindList(priorValues, label: "Delete Shortcut")
+            MainActor.assumeIsolated {
+                store.replaceKeybindList(priorValues, label: "Delete Shortcut")
+            }
         }
         undoManager?.setActionName("Delete Shortcut")
         file.setList("keybind", values: newValues)
@@ -997,7 +1003,9 @@ final class ConfigStore {
         }
 
         undoManager?.registerUndo(withTarget: self) { store in
-            store.replaceKeybindList(priorValues, label: "Edit Shortcut")
+            MainActor.assumeIsolated {
+                store.replaceKeybindList(priorValues, label: "Edit Shortcut")
+            }
         }
         undoManager?.setActionName("Edit Shortcut")
         file.setList("keybind", values: newValues)
@@ -1026,10 +1034,12 @@ final class ConfigStore {
         guard oldDisplay != value else { return }
 
         undoManager?.registerUndo(withTarget: self) { store in
-            if let old {
-                store.setScalar(key, value: old, label: label)
-            } else {
-                store.deleteKey(key, label: label)
+            MainActor.assumeIsolated {
+                if let old {
+                    store.setScalar(key, value: old, label: label)
+                } else {
+                    store.deleteKey(key, label: label)
+                }
             }
         }
         undoManager?.setActionName(label)
@@ -1057,7 +1067,9 @@ final class ConfigStore {
     private func setFontNumerals(_ mode: FontNumerals, label: String) {
         let priorValues = file.listValues(for: "font-feature")
         undoManager?.registerUndo(withTarget: self) { store in
-            store.replaceFontFeatureList(priorValues, label: label)
+            MainActor.assumeIsolated {
+                store.replaceFontFeatureList(priorValues, label: label)
+            }
         }
         undoManager?.setActionName(label)
         file.setFontNumerals(mode)
@@ -1074,7 +1086,9 @@ final class ConfigStore {
         // Capture the prior sign so undo can restore (or remove) it.
         let priorSign = file.fontFeatureSign(for: tag)
         undoManager?.registerUndo(withTarget: self) { store in
-            store.applyFontFeatureUndo(tag, sign: priorSign, label: label)
+            MainActor.assumeIsolated {
+                store.applyFontFeatureUndo(tag, sign: priorSign, label: label)
+            }
         }
         undoManager?.setActionName(label)
         file.setFontFeature(tag, sign: sign)
@@ -1089,7 +1103,9 @@ final class ConfigStore {
     private func setCommaFlag(_ key: String, flag: String, enabled: Bool, label: String) {
         let priorFlags = file.commaFlags(for: key)
         undoManager?.registerUndo(withTarget: self) { store in
-            store.applyCommaFlagsUndo(key, flags: priorFlags, label: label)
+            MainActor.assumeIsolated {
+                store.applyCommaFlagsUndo(key, flags: priorFlags, label: label)
+            }
         }
         undoManager?.setActionName(label)
         file.setCommaFlag(key, flag: flag, enabled: enabled)
@@ -1109,10 +1125,12 @@ final class ConfigStore {
         guard file.contains(key: key) else { return }
         let priorValues = file.listValues(for: key)
         undoManager?.registerUndo(withTarget: self) { store in
-            for value in priorValues {
-                store.file.appendList(key, value: value)
+            MainActor.assumeIsolated {
+                for value in priorValues {
+                    store.file.appendList(key, value: value)
+                }
+                store.schedulePersist()
             }
-            store.schedulePersist()
         }
         undoManager?.setActionName(label)
         file.delete(key)
