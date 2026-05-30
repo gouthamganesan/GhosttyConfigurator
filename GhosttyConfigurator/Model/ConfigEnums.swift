@@ -428,6 +428,47 @@ enum ShellIntegration: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+// MARK: - Scrollback
+
+/// `right-click-action` — what happens on right-click in the terminal.
+enum RightClickAction: String, CaseIterable, Identifiable, Hashable {
+    case contextMenu = "context-menu"
+    case paste
+    case copy
+    case copyOrPaste = "copy-or-paste"
+    case ignore
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .contextMenu: "Show context menu"
+        case .paste: "Paste"
+        case .copy: "Copy selection"
+        case .copyOrPaste: "Copy if selected, else paste"
+        case .ignore: "Do nothing"
+        }
+    }
+}
+
+/// `scrollbar` — when the scrollbar widget appears.
+enum Scrollbar: String, CaseIterable, Identifiable, Hashable {
+    case system, never
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .system: "Match system setting"
+        case .never: "Never show"
+        }
+    }
+}
+
 // MARK: - General
 
 enum AutoUpdateMode: String, CaseIterable, Identifiable, Hashable {

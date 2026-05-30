@@ -109,10 +109,19 @@ final class ConfigStore {
         let clipboardRead: ClipboardPermission = .ask
         let clipboardWrite: ClipboardPermission = .allow
         let clipboardPasteProtection: Bool = true
+        let clipboardPasteBracketedSafe: Bool = true
         let clipboardTrimTrailingSpaces: Bool = true
         let copyOnSelect: CopyOnSelect = .off
         let selectionClearOnTyping: Bool = true
+        let selectionClearOnCopy: Bool = false
+        let selectionWordChars: String = "'\"│`|:;,()[]{}<>$"
+        let rightClickAction: RightClickAction = .contextMenu
         let mouseShiftCapture: MouseShiftCapture = .falseValue
+        // Scrollback
+        let scrollbackLimitBytes: Int = 10_000_000
+        let scrollToBottomOnKeystroke: Bool = true
+        let scrollToBottomOnOutput: Bool = false
+        let scrollbar: Scrollbar = .system
         let mouseScrollMultiplier: Double = 1.0
         let mouseReporting: Bool = true
         let focusFollowsMouse: Bool = false
@@ -833,6 +842,72 @@ final class ConfigStore {
         set { setBool("focus-follows-mouse", newValue, label: "Toggle Focus Follows Mouse") }
     }
 
+    var selectionClearOnCopy: Bool {
+        get { file.bool(for: "selection-clear-on-copy", default: defaults.selectionClearOnCopy) }
+        set { setBool("selection-clear-on-copy", newValue, label: "Toggle Clear Selection on Copy") }
+    }
+
+    var selectionWordChars: String {
+        get { file.scalarValue(for: "selection-word-chars") ?? defaults.selectionWordChars }
+        set {
+            if newValue == defaults.selectionWordChars {
+                deleteKey("selection-word-chars", label: "Reset Word Boundaries")
+            } else {
+                setScalar("selection-word-chars", value: newValue, label: "Change Word Boundaries")
+            }
+        }
+    }
+
+    var clipboardPasteBracketedSafe: Bool {
+        get { file.bool(for: "clipboard-paste-bracketed-safe", default: defaults.clipboardPasteBracketedSafe) }
+        set { setBool("clipboard-paste-bracketed-safe", newValue, label: "Toggle Bracketed Paste Safety") }
+    }
+
+    var rightClickAction: RightClickAction {
+        get { file.enumValue(RightClickAction.self, for: "right-click-action", default: defaults.rightClickAction) }
+        set { setEnum("right-click-action", newValue, label: "Change Right-Click Action") }
+    }
+
+    // MARK: - Scrollback
+
+    /// `scrollback-limit` is stored as bytes on disk. The UI exposes it in
+    /// megabytes for legibility; this accessor handles the conversion.
+    var scrollbackLimitMB: Double {
+        get {
+            let bytes = file.int(for: "scrollback-limit", default: defaults.scrollbackLimitBytes)
+            return Double(bytes) / 1_000_000.0
+        }
+        set {
+            let bytes = Int(newValue * 1_000_000)
+            setInt("scrollback-limit", bytes, label: "Change Scrollback Limit")
+        }
+    }
+
+    var scrollToBottomOnKeystroke: Bool {
+        get { isCommaFlagEnabled("scroll-to-bottom", flag: "keystroke", default: defaults.scrollToBottomOnKeystroke) }
+        set { setCommaFlag(
+            "scroll-to-bottom",
+            flag: "keystroke",
+            enabled: newValue,
+            label: "Toggle Scroll-To-Bottom on Keystroke"
+        ) }
+    }
+
+    var scrollToBottomOnOutput: Bool {
+        get { isCommaFlagEnabled("scroll-to-bottom", flag: "output", default: defaults.scrollToBottomOnOutput) }
+        set { setCommaFlag(
+            "scroll-to-bottom",
+            flag: "output",
+            enabled: newValue,
+            label: "Toggle Scroll-To-Bottom on Output"
+        ) }
+    }
+
+    var scrollbar: Scrollbar {
+        get { file.enumValue(Scrollbar.self, for: "scrollbar", default: defaults.scrollbar) }
+        set { setEnum("scrollbar", newValue, label: "Change Scrollbar Visibility") }
+    }
+
     // MARK: - General
 
     var autoUpdate: AutoUpdateMode {
@@ -1072,7 +1147,15 @@ final class ConfigStore {
     }
 
     private func isShellFeatureEnabled(_ flag: String, default defaultValue: Bool) -> Bool {
-        let flags = file.commaFlags(for: "shell-integration-features")
+        isCommaFlagEnabled("shell-integration-features", flag: flag, default: defaultValue)
+    }
+
+    /// Generic reader for any comma-flag list key (e.g. `scroll-to-bottom`,
+    /// `shell-integration-features`). Recognises the `no-` prefix to
+    /// explicitly disable, falls back to `defaultValue` when neither form
+    /// is present.
+    private func isCommaFlagEnabled(_ key: String, flag: String, default defaultValue: Bool) -> Bool {
+        let flags = file.commaFlags(for: key)
         if flags.contains(flag) { return true }
         if flags.contains("no-\(flag)") { return false }
         return defaultValue

@@ -197,6 +197,38 @@ enum DocOverrides {
             on remote hosts you haven't opted into.
             """,
             link: URL(string: "https://ghostty.org/docs/config/reference#shell-integration-features")
+        ),
+
+        // MARK: scroll-to-bottom — per-flag context
+
+        "scroll-to-bottom (keystroke)": Entry(
+            title: "keystroke — Jump to bottom when you type",
+            body: """
+            When on, any keystroke that sends data to the running program \
+            also scrolls the surface to the bottom. Lets you keep scrolled \
+            up to read history, then start typing and snap back to the \
+            prompt instantly.
+
+            On by default — matches the behaviour most terminals ship. \
+            Disable if you prefer to stay scrolled-up regardless (e.g. \
+            you're skimming a long log while running unrelated commands).
+            """,
+            link: URL(string: "https://ghostty.org/docs/config/reference#scroll-to-bottom")
+        ),
+
+        "scroll-to-bottom (output)": Entry(
+            title: "output — Jump to bottom on new output",
+            body: """
+            When on, the surface auto-scrolls to the bottom every time the \
+            program prints something new. Useful for live-tailing logs \
+            (`tail -f`) when you don't want to be left behind.
+
+            Off by default. Most users prefer to control scroll manually — \
+            otherwise scrolling up to inspect earlier output is constantly \
+            disrupted by new lines arriving. Pairs naturally with the \
+            keystroke option: scroll up freely, type to come back.
+            """,
+            link: URL(string: "https://ghostty.org/docs/config/reference#scroll-to-bottom")
         )
     ]
 }

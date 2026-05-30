@@ -532,6 +532,66 @@ enum SearchCatalog {
             docKey: "focus-follows-mouse",
             keywords: ["sloppy focus"]
         ),
+        .init(
+            id: "selection-clear-on-copy",
+            pane: .clipboardMouse,
+            title: "Clear selection after copy",
+            docKey: "selection-clear-on-copy",
+            keywords: ["copy", "selection"]
+        ),
+        .init(
+            id: "selection-word-chars",
+            pane: .clipboardMouse,
+            title: "Word boundaries",
+            subtitle: "Characters that stop double-click selection",
+            docKey: "selection-word-chars",
+            keywords: ["word", "boundary", "double-click"]
+        ),
+        .init(
+            id: "clipboard-paste-bracketed-safe",
+            pane: .clipboardMouse,
+            title: "Trust bracketed pastes",
+            subtitle: "Skip prompt when program opts into bracketed mode",
+            docKey: "clipboard-paste-bracketed-safe",
+            keywords: ["paste", "bracketed", "security"]
+        ),
+        .init(
+            id: "right-click-action",
+            pane: .clipboardMouse,
+            title: "Right-click action",
+            subtitle: "Context menu, paste, copy, or ignore",
+            docKey: "right-click-action",
+            keywords: ["right-click", "context menu", "paste"]
+        ),
+        .init(
+            id: "scrollback-limit",
+            pane: .clipboardMouse,
+            title: "Scrollback buffer size",
+            subtitle: "In MB; default ~10 MB",
+            docKey: "scrollback-limit",
+            keywords: ["scrollback", "history", "memory", "buffer"]
+        ),
+        .init(
+            id: "scrollbar",
+            pane: .clipboardMouse,
+            title: "Scrollbar visibility",
+            docKey: "scrollbar",
+            keywords: ["scrollbar", "gutter"]
+        ),
+        .init(
+            id: "scroll-to-bottom-keystroke",
+            pane: .clipboardMouse,
+            title: "Jump to bottom on keystroke",
+            docKey: "scroll-to-bottom (keystroke)",
+            keywords: ["scroll", "jump", "bottom"]
+        ),
+        .init(
+            id: "scroll-to-bottom-output",
+            pane: .clipboardMouse,
+            title: "Jump to bottom on new output",
+            docKey: "scroll-to-bottom (output)",
+            keywords: ["scroll", "jump", "bottom", "output"]
+        ),
 
         // MARK: General
 

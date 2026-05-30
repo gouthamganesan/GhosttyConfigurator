@@ -53,6 +53,17 @@ struct ClipboardAndMousePane: View {
                     )
                 }
 
+                Toggle(isOn: $store.clipboardPasteBracketedSafe) {
+                    rowLabel(
+                        "Trust bracketed pastes",
+                        modified: store.isModified(
+                            \.clipboardPasteBracketedSafe,
+                            default: store.defaults.clipboardPasteBracketedSafe
+                        ),
+                        docKey: "clipboard-paste-bracketed-safe"
+                    )
+                }
+
                 Toggle(isOn: $store.clipboardTrimTrailingSpaces) {
                     rowLabel(
                         "Trim trailing spaces on paste",
@@ -67,7 +78,7 @@ struct ClipboardAndMousePane: View {
                 Text("Paste")
             } footer: {
                 Text(
-                    "Paste protection asks before pasting content with newlines or control characters — common phishing vector via copied terminal commands."
+                    "Paste protection asks before pasting content with newlines or control characters — common phishing vector via copied terminal commands. Bracketed-paste trust skips the prompt when the running program has explicitly opted into bracketed-paste mode (e.g. a shell with a properly configured prompt)."
                 )
             }
 
@@ -95,11 +106,54 @@ struct ClipboardAndMousePane: View {
                         docKey: "selection-clear-on-typing"
                     )
                 }
+
+                Toggle(isOn: $store.selectionClearOnCopy) {
+                    rowLabel(
+                        "Clear selection after copy",
+                        modified: store.isModified(
+                            \.selectionClearOnCopy,
+                            default: store.defaults.selectionClearOnCopy
+                        ),
+                        docKey: "selection-clear-on-copy"
+                    )
+                }
+
+                DisclosureGroup("Word boundaries") {
+                    LabeledContent {
+                        TextField("", text: $store.selectionWordChars)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.system(.body, design: .monospaced))
+                            .frame(maxWidth: 280)
+                    } label: {
+                        rowLabel(
+                            "Characters",
+                            modified: store.selectionWordChars != store.defaults.selectionWordChars,
+                            docKey: "selection-word-chars"
+                        )
+                    }
+                }
             } header: {
                 Text("Selection")
+            } footer: {
+                Text(
+                    "Word boundaries control where double-click selection stops. Default includes brackets, punctuation, and quoting characters — useful for selecting tokens in code."
+                )
             }
 
             Section {
+                LabeledContent {
+                    Picker("", selection: $store.rightClickAction) {
+                        ForEach(RightClickAction.allCases) { Text($0.label).tag($0) }
+                    }
+                    .labelsHidden().pickerStyle(.menu).fixedSize()
+                } label: {
+                    rowLabel(
+                        "Right-click action",
+                        modified: store.isModified(\.rightClickAction, default: store.defaults.rightClickAction),
+                        docKey: "right-click-action"
+                    )
+                }
+
                 LabeledContent {
                     Picker("", selection: $store.mouseShiftCapture) {
                         ForEach(MouseShiftCapture.allCases) { Text($0.label).tag($0) }
@@ -148,11 +202,62 @@ struct ClipboardAndMousePane: View {
             } header: {
                 Text("Mouse")
             }
+
+            Section {
+                LabeledContent {
+                    Stepper(value: $store.scrollbackLimitMB, in: 1 ... 1000, step: 1) {
+                        Text("\(Int(store.scrollbackLimitMB)) MB")
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+                } label: {
+                    rowLabel(
+                        "Buffer size",
+                        modified: Int(store.scrollbackLimitMB * 1_000_000) != store.defaults.scrollbackLimitBytes,
+                        docKey: "scrollback-limit"
+                    )
+                }
+
+                LabeledContent {
+                    Picker("", selection: $store.scrollbar) {
+                        ForEach(Scrollbar.allCases) { Text($0.label).tag($0) }
+                    }
+                    .labelsHidden().pickerStyle(.menu).fixedSize()
+                } label: {
+                    rowLabel(
+                        "Scrollbar",
+                        modified: store.isModified(\.scrollbar, default: store.defaults.scrollbar),
+                        docKey: "scrollbar"
+                    )
+                }
+
+                Toggle(isOn: $store.scrollToBottomOnKeystroke) {
+                    rowLabel(
+                        "Jump to bottom on keystroke",
+                        modified: store.scrollToBottomOnKeystroke != store.defaults.scrollToBottomOnKeystroke,
+                        docKey: "scroll-to-bottom (keystroke)"
+                    )
+                }
+
+                Toggle(isOn: $store.scrollToBottomOnOutput) {
+                    rowLabel(
+                        "Jump to bottom on new output",
+                        modified: store.scrollToBottomOnOutput != store.defaults.scrollToBottomOnOutput,
+                        docKey: "scroll-to-bottom (output)"
+                    )
+                }
+            } header: {
+                Text("Scrollback")
+            } footer: {
+                Text(
+                    "Buffer size is per terminal surface; memory is allocated lazily up to this limit. Default is ~10 MB, which holds tens of thousands of lines of typical output."
+                )
+            }
         }
         .formStyle(.grouped)
         .paneToolbar(
             title: "Clipboard & Mouse",
-            subtitle: "Permissions, paste, selection."
+            subtitle: "Permissions, paste, selection, scrollback."
         )
     }
 }
