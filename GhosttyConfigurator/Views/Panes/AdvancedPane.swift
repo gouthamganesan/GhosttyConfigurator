@@ -14,8 +14,10 @@ struct AdvancedPane: View {
     @State private var newProfileError: String?
 
     var body: some View {
-        Form {
+        @Bindable var store = store
+        return Form {
             profilesSection
+            quickTerminalSection(store: store)
             actionsSection
         }
         .formStyle(.grouped)
@@ -59,6 +61,82 @@ struct AdvancedPane: View {
         } footer: {
             Text(
                 "Profiles are `config-file = ?path` includes — Ghostty applies them in order; later overrides earlier. Drag-reorder is via the ↑↓ controls."
+            )
+        }
+    }
+
+    private func quickTerminalSection(store: ConfigStore) -> some View {
+        @Bindable var store = store
+        return Section {
+            LabeledContent {
+                Picker("", selection: $store.quickTerminalPosition) {
+                    ForEach(QuickTerminalPosition.allCases) { Text($0.label).tag($0) }
+                }
+                .labelsHidden().pickerStyle(.menu).fixedSize()
+            } label: {
+                rowLabel(
+                    "Position",
+                    modified: store.quickTerminalPosition != .top,
+                    docKey: "quick-terminal-position"
+                )
+            }
+
+            LabeledContent {
+                Picker("", selection: $store.quickTerminalScreen) {
+                    ForEach(QuickTerminalScreen.allCases) { Text($0.label).tag($0) }
+                }
+                .labelsHidden().pickerStyle(.menu).fixedSize()
+            } label: {
+                rowLabel(
+                    "Screen",
+                    modified: store.quickTerminalScreen != .main,
+                    docKey: "quick-terminal-screen"
+                )
+            }
+
+            LabeledContent {
+                Picker("", selection: $store.quickTerminalSpaceBehavior) {
+                    ForEach(QuickTerminalSpaceBehavior.allCases) { Text($0.label).tag($0) }
+                }
+                .labelsHidden().pickerStyle(.menu).fixedSize()
+            } label: {
+                rowLabel(
+                    "Across Spaces",
+                    modified: store.quickTerminalSpaceBehavior != .move,
+                    docKey: "quick-terminal-space-behavior"
+                )
+            }
+
+            LabeledContent {
+                Stepper(
+                    value: $store.quickTerminalAnimationDuration,
+                    in: 0 ... 2,
+                    step: 0.05
+                ) {
+                    Text(String(format: "%.2f s", store.quickTerminalAnimationDuration))
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+            } label: {
+                rowLabel(
+                    "Animation duration",
+                    modified: store.quickTerminalAnimationDuration != 0.2,
+                    docKey: "quick-terminal-animation-duration"
+                )
+            }
+
+            Toggle(isOn: $store.quickTerminalAutohide) {
+                rowLabel(
+                    "Auto-hide on focus loss",
+                    modified: !store.quickTerminalAutohide,
+                    docKey: "quick-terminal-autohide"
+                )
+            }
+        } header: {
+            Text("Quick Terminal")
+        } footer: {
+            Text(
+                "The quick terminal is a slide-out drop-down. It needs a hotkey — bind `toggle_quick_terminal` in **Keyboard → Add Shortcut**; there's no default binding."
             )
         }
     }

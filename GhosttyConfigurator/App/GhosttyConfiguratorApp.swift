@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 @main
@@ -29,6 +30,15 @@ struct GhosttyConfiguratorApp: App {
         .commands {
             CommandGroup(replacing: .newItem) {}
             CommandGroup(replacing: .help) {}
+            // ⌘, normally opens "Settings…" — for a configurator app that *is*
+            // settings, that's confusing. Repurpose to "Open active config file"
+            // so the keyboard shortcut does something useful instead of nothing.
+            CommandGroup(replacing: .appSettings) {
+                Button("Open Active Config File") {
+                    NSWorkspace.shared.open(store.fileURL)
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
         }
 
         // Always present the window at launch, even if a prior session left

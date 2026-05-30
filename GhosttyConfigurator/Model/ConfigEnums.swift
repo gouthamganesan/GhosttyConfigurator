@@ -645,6 +645,62 @@ enum MacosIconFrame: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+// MARK: - Quick Terminal
+
+/// `quick-terminal-position` — where the slide-out terminal docks.
+enum QuickTerminalPosition: String, CaseIterable, Identifiable, Hashable {
+    case top, bottom, left, right, center
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .top: "Top"
+        case .bottom: "Bottom"
+        case .left: "Left"
+        case .right: "Right"
+        case .center: "Center"
+        }
+    }
+}
+
+/// `quick-terminal-screen` — which display the quick terminal opens on. macOS-only.
+enum QuickTerminalScreen: String, CaseIterable, Identifiable, Hashable {
+    case main
+    case mouse
+    case macosMenuBar = "macos-menu-bar"
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .main: "OS-recommended main screen"
+        case .mouse: "Screen under the mouse"
+        case .macosMenuBar: "Screen with the menu bar"
+        }
+    }
+}
+
+/// `quick-terminal-space-behavior` — what happens when you switch macOS spaces.
+enum QuickTerminalSpaceBehavior: String, CaseIterable, Identifiable, Hashable {
+    case move, remain
+
+    var id: String {
+        rawValue
+    }
+
+    var label: String {
+        switch self {
+        case .move: "Follow me across spaces"
+        case .remain: "Stay on the space it was opened on"
+        }
+    }
+}
+
 /// `notify-on-command-finish` — when to send command-finished notifications.
 enum NotifyOnCommandFinish: String, CaseIterable, Identifiable, Hashable {
     case never, unfocused, always

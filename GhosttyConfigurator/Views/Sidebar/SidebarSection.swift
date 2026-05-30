@@ -18,10 +18,16 @@ enum SidebarSection: String, CaseIterable, Identifiable, Hashable {
         rawValue
     }
 
-    // MARK: - Grouping (rendered as three separate List sections)
+    // MARK: - Grouping (rendered as separate List sections, in order)
 
+    //
+    // `general` sits alone at the top — it's the macOS System Settings idiom
+    // for the catch-all section (lifecycle, updates, notifications), and the
+    // user explicitly requested it not be lumped with the behaviour group.
+
+    static let generalGroup: [SidebarSection] = [.general]
     static let visualGroup: [SidebarSection] = [.appearance, .window, .font, .cursor]
-    static let behaviorGroup: [SidebarSection] = [.keyboard, .shell, .clipboardMouse, .general]
+    static let behaviorGroup: [SidebarSection] = [.keyboard, .shell, .clipboardMouse]
     static let systemGroup: [SidebarSection] = [.advanced, .about]
 
     // MARK: - Display metadata

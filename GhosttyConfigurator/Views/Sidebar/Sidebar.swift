@@ -24,6 +24,7 @@ struct Sidebar: View {
 
     private var navList: some View {
         List(selection: $selection) {
+            Section { ForEach(SidebarSection.generalGroup) { row($0) } }
             Section { ForEach(SidebarSection.visualGroup) { row($0) } }
             Section { ForEach(SidebarSection.behaviorGroup) { row($0) } }
             Section { ForEach(SidebarSection.systemGroup) { row($0) } }

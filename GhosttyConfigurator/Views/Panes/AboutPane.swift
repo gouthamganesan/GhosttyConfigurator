@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct AboutPane: View {
@@ -13,6 +14,15 @@ struct AboutPane: View {
 
     private var buildNumber: String {
         (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "1"
+    }
+
+    private var prettyConfigPath: String {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        var path = store.fileURL.path
+        if path.hasPrefix(home) {
+            path = "~" + path.dropFirst(home.count)
+        }
+        return path
     }
 
     private var ghosttyVersionLine: String? {
@@ -77,6 +87,25 @@ struct AboutPane: View {
             }
 
             Section {
+                LabeledContent {
+                    Button("Reveal in Finder") {
+                        NSWorkspace.shared.activateFileViewerSelecting([store.fileURL])
+                    }
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Active config file")
+                        Text(prettyConfigPath)
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                }
+
+                Button("Open in editor") {
+                    store.openActiveConfig()
+                }
+
                 Link("Configurator source", destination: URL(string: "https://github.com/")!)
                 Link("Report a configurator issue", destination: URL(string: "https://github.com/")!)
             } header: {
