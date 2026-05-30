@@ -233,6 +233,19 @@ struct ConfigFile: Hashable, Sendable {
         return .none
     }
 
+    /// Derive the `cursor-text` 4-state from the raw config value.
+    func cursorTextMode() -> CursorTextMode {
+        guard let raw = scalarValue(for: "cursor-text"), !raw.isEmpty else {
+            return .default
+        }
+        switch raw.lowercased() {
+        case "cell-background": return .cellBackground
+        case "cell-foreground": return .cellForeground
+        default:
+            return ColorParsing.color(from: raw) != nil ? .custom : .default
+        }
+    }
+
     // MARK: - Font-feature flag list
 
     /// `font-feature` is a list of `+tag` / `-tag` entries (e.g. `+liga`, `-calt`).

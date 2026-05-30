@@ -77,6 +77,46 @@ enum CursorStyle: String, CaseIterable, Identifiable, Hashable, Sendable {
     }
 }
 
+/// `cursor-style-blink` — tri-state, not Bool. Absence means "respect DEC
+/// Mode 12 (programs can override)", which is distinct from explicit `true`
+/// / `false` (lock the value, ignore DEC Mode 12).
+enum CursorStyleBlink: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case `default`
+    case alwaysBlink = "true"
+    case neverBlink = "false"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .default:     "Default (programs decide)"
+        case .alwaysBlink: "Always blink"
+        case .neverBlink:  "Never blink"
+        }
+    }
+}
+
+/// `cursor-text` — color of text under the cursor. Four modes mirror
+/// `bold-color`: default (key absent), match cell background, match cell
+/// foreground, or a literal hex.
+enum CursorTextMode: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case `default`
+    case cellBackground = "cell-background"
+    case cellForeground = "cell-foreground"
+    case custom
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .default:        "Default"
+        case .cellBackground: "Cell background"
+        case .cellForeground: "Cell foreground"
+        case .custom:         "Custom color"
+        }
+    }
+}
+
 // MARK: - Window
 
 /// `macos-titlebar-style` — controls how the title bar renders on macOS.

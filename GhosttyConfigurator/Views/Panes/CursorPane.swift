@@ -19,7 +19,12 @@ struct CursorPane: View {
                              docKey: "cursor-style")
                 }
 
-                Toggle(isOn: $store.cursorStyleBlink) {
+                LabeledContent {
+                    Picker("", selection: $store.cursorStyleBlink) {
+                        ForEach(CursorStyleBlink.allCases) { Text($0.label).tag($0) }
+                    }
+                    .labelsHidden().pickerStyle(.menu).fixedSize()
+                } label: {
                     rowLabel("Blink",
                              modified: store.isModified(\.cursorStyleBlink, default: store.defaults.cursorStyleBlink),
                              docKey: "cursor-style-blink")
@@ -38,8 +43,42 @@ struct CursorPane: View {
                              modified: store.isModified(\.cursorOpacity, default: store.defaults.cursorOpacity),
                              docKey: "cursor-opacity")
                 }
+
+                LabeledContent {
+                    HStack(spacing: 8) {
+                        Toggle("Auto", isOn: $store.isCursorColorAuto)
+                            .toggleStyle(.checkbox)
+                        if !store.isCursorColorAuto {
+                            ColorPicker("", selection: $store.cursorColor, supportsOpacity: false)
+                                .labelsHidden()
+                        }
+                    }
+                } label: {
+                    rowLabel("Color",
+                             modified: !store.isCursorColorAuto,
+                             docKey: "cursor-color")
+                }
+
+                LabeledContent {
+                    HStack(spacing: 8) {
+                        Picker("", selection: $store.cursorTextMode) {
+                            ForEach(CursorTextMode.allCases) { Text($0.label).tag($0) }
+                        }
+                        .labelsHidden().pickerStyle(.menu).fixedSize()
+                        if store.cursorTextMode == .custom {
+                            ColorPicker("", selection: $store.cursorTextCustom, supportsOpacity: false)
+                                .labelsHidden()
+                        }
+                    }
+                } label: {
+                    rowLabel("Text color",
+                             modified: store.cursorTextMode != store.defaults.cursorTextMode,
+                             docKey: "cursor-text")
+                }
             } header: {
                 Text("Appearance")
+            } footer: {
+                Text("**Blink** \"Default\" lets programs control blinking via DEC Mode 12; \"Always\"/\"Never\" lock the cursor and ignore that mode. **Text color** draws the text *under* the cursor — set it to *cell foreground* for inverted-cursor look.")
             }
 
             Section {

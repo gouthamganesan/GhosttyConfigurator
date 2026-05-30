@@ -72,10 +72,12 @@ final class ConfigStore {
 
         // Cursor
         let cursorStyle: CursorStyle = .block
-        let cursorStyleBlink: Bool = true
+        let cursorStyleBlink: CursorStyleBlink = .default
         let cursorOpacity: Double = 1.0
         let cursorClickToMove: Bool = false
         let mouseHideWhileTyping: Bool = false
+        let cursorTextMode: CursorTextMode = .default
+        let cursorTextCustomFallback: Color = .black
 
         // Font
         let fontFamily: String = "JetBrains Mono"
@@ -460,9 +462,47 @@ final class ConfigStore {
         set { setEnum("cursor-style", newValue, label: "Change Cursor Style") }
     }
 
-    var cursorStyleBlink: Bool {
-        get { file.bool(for: "cursor-style-blink", default: defaults.cursorStyleBlink) }
-        set { setBool("cursor-style-blink", newValue, label: "Toggle Cursor Blink") }
+    var cursorStyleBlink: CursorStyleBlink {
+        get {
+            guard let raw = file.scalarValue(for: "cursor-style-blink"), !raw.isEmpty else {
+                return .default
+            }
+            return CursorStyleBlink(rawValue: raw) ?? .default
+        }
+        set {
+            if newValue == .default {
+                deleteKey("cursor-style-blink", label: "Reset Cursor Blink")
+            } else {
+                setScalar("cursor-style-blink", value: newValue.rawValue, label: "Change Cursor Blink")
+            }
+        }
+    }
+
+    /// `cursor-text` — color of text drawn over the cursor. 4-state mode +
+    /// custom hex follows the same shape as `bold-color`.
+    var cursorTextMode: CursorTextMode {
+        get { file.cursorTextMode() }
+        set {
+            switch newValue {
+            case .default:
+                deleteKey("cursor-text", label: "Reset Cursor Text Color")
+            case .cellBackground:
+                setScalar("cursor-text", value: "cell-background", label: "Use Cell Background for Cursor Text")
+            case .cellForeground:
+                setScalar("cursor-text", value: "cell-foreground", label: "Use Cell Foreground for Cursor Text")
+            case .custom:
+                if file.color(for: "cursor-text") == nil {
+                    setScalar("cursor-text",
+                              value: ColorParsing.hexString(from: defaults.cursorTextCustomFallback),
+                              label: "Use Custom Cursor Text Color")
+                }
+            }
+        }
+    }
+
+    var cursorTextCustom: Color {
+        get { file.color(for: "cursor-text") ?? defaults.cursorTextCustomFallback }
+        set { setScalar("cursor-text", value: ColorParsing.hexString(from: newValue), label: "Change Cursor Text Color") }
     }
 
     var cursorOpacity: Double {
