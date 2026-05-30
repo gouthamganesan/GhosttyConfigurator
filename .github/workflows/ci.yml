@@ -70,8 +70,22 @@ jobs:
 
       - name: Bundle-size gate (Release < 8 MB)
         run: |
-          APP="build/Build/Products/Release/GhosttyConfigurator.app"
-          if [ ! -d "$APP" ]; then echo "No Release .app found at $APP"; ls -la build/Build/Products/ || true; exit 1; fi
+          # The CI runner sometimes ignores -derivedDataPath; search a few
+          # plausible locations before giving up.
+          APP=""
+          for candidate in \
+            "build/Build/Products/Release/GhosttyConfigurator.app" \
+            "$HOME/Library/Developer/Xcode/DerivedData"/*/Build/Products/Release/GhosttyConfigurator.app \
+            "/tmp"/*/Build/Products/Release/GhosttyConfigurator.app; do
+            if [ -d "$candidate" ]; then APP="$candidate"; break; fi
+          done
+          if [ -z "$APP" ]; then
+            echo "No Release .app found. Searched candidates:"
+            find "$HOME/Library/Developer/Xcode/DerivedData" -name "GhosttyConfigurator.app" 2>/dev/null || true
+            find "$(pwd)" -name "GhosttyConfigurator.app" 2>/dev/null || true
+            exit 1
+          fi
+          echo "Found .app at: $APP"
           SIZE_KB=$(du -k "$APP" | tail -1 | cut -f1)
           echo "App bundle size: ${SIZE_KB} KB"
           if [ "$SIZE_KB" -gt 8192 ]; then
