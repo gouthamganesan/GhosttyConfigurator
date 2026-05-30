@@ -18,6 +18,9 @@ xcuserdata/
 # Xcode build artifacts
 build/
 DerivedData/
+# Convenience copy of the freshly-built .app placed at the project root
+# after each working pass (see CLAUDE.md workflow rule).
+/GhosttyConfigurator.app/
 *.hmap
 *.ipa
 *.dSYM.zip

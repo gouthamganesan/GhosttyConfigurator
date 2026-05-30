@@ -1,11 +1,23 @@
 import SwiftUI
 
 struct AboutPane: View {
-    private var appVersion: String {
-        let dict = Bundle.main.infoDictionary
-        let marketing = dict?["CFBundleShortVersionString"] as? String ?? "0.0.0"
-        let build = dict?["CFBundleVersion"] as? String ?? "1"
-        return "\(marketing) (\(build))"
+    @Environment(ConfigStore.self) private var store
+
+    private var appName: String {
+        (Bundle.main.infoDictionary?["CFBundleName"] as? String) ?? "Ghostty Configurator"
+    }
+
+    private var marketingVersion: String {
+        (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "0.0.0"
+    }
+
+    private var buildNumber: String {
+        (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "1"
+    }
+
+    private var ghosttyVersionLine: String? {
+        guard let version = store.ghosttyVersion, !version.isEmpty else { return nil }
+        return "Ghostty \(version) installed"
     }
 
     private let docsLinks: [(String, String)] = [
@@ -22,6 +34,36 @@ struct AboutPane: View {
 
     var body: some View {
         Form {
+            Section {
+                VStack(spacing: 10) {
+                    Image("Logo")
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: 96, height: 96)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .accessibilityHidden(true)
+
+                    Text(appName)
+                        .font(.title)
+                        .bold()
+
+                    Text("Version \(marketingVersion) (\(buildNumber))")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+
+                    if let ghosttyVersionLine {
+                        Text(ghosttyVersionLine)
+                            .font(.subheadline)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .accessibilityElement(children: .combine)
+            }
+
             Section {
                 ForEach(docsLinks, id: \.0) { label, urlString in
                     if let url = URL(string: urlString) {
@@ -43,10 +85,11 @@ struct AboutPane: View {
         }
         .formStyle(.grouped)
         .paneToolbar(title: "About",
-                     subtitle: "Version \(appVersion)")
+                     subtitle: "Version \(marketingVersion) (\(buildNumber))")
     }
 }
 
 #Preview {
     NavigationStack { AboutPane() }
+        .environment(ConfigStore())
 }

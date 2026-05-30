@@ -20,6 +20,11 @@ final class ConfigStore {
     let fileURL: URL
     let defaults = Defaults()
 
+    /// Version string from `ghostty --version`. `nil` until the detection task
+    /// finishes (or if Ghostty isn't installed); empty after a successful run
+    /// that returned nothing parseable.
+    private(set) var ghosttyVersion: String?
+
     // Validation caches. `knownThemes` is nil until the theme index loads —
     // the validator skips theme checks in that state so it doesn't false-flag.
     private(set) var knownThemes: Set<String>?
@@ -128,6 +133,35 @@ final class ConfigStore {
     func loadThemeIndex() async {
         let refs = await ThemeLibrary.shared.index()
         self.knownThemes = Set(refs.map(\.name))
+    }
+
+    /// Shell out to `ghostty --version` once and cache the result for the
+    /// About hero. Silent on failure — the About pane just hides the line.
+    func loadGhosttyVersion() async {
+        self.ghosttyVersion = await Self.detectGhosttyVersion()
+    }
+
+    private static func detectGhosttyVersion() async -> String {
+        await Task.detached(priority: .utility) { () -> String in
+            guard let cli = ConfigPaths.ghosttyCLIURL() else { return "" }
+            let task = Process()
+            task.executableURL = cli
+            task.arguments = ["--version"]
+            let pipe = Pipe()
+            task.standardOutput = pipe
+            task.standardError = Pipe()
+            do {
+                try task.run()
+                task.waitUntilExit()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                let output = String(decoding: data, as: UTF8.self)
+                guard let first = output.split(separator: "\n").first else { return "" }
+                let parts = first.split(separator: " ")
+                return parts.count >= 2 ? String(parts[1]) : String(first)
+            } catch {
+                return ""
+            }
+        }.value
     }
 
     /// All current lint findings, keyed by Ghostty docKey. Views look up
