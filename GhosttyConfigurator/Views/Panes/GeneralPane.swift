@@ -289,6 +289,7 @@ struct GeneralPane: View {
                             }
                             .buttonStyle(.borderless)
                             .help("Clear the audio path")
+                            .accessibilityLabel("Clear audio path")
                         }
                     }
                 } label: {

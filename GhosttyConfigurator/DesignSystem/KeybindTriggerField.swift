@@ -33,6 +33,7 @@ struct KeybindTriggerField: View {
                 }
                 .buttonStyle(.plain)
                 .help("Clear")
+                .accessibilityLabel("Clear shortcut")
             }
         }
         .padding(.horizontal, 10)

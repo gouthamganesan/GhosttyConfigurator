@@ -31,6 +31,7 @@ struct ThemeTile: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Theme: \(theme.name). \(theme.palette.count) colors.\(isSelected ? " Selected." : "")")
     }
 
     // MARK: - Preview

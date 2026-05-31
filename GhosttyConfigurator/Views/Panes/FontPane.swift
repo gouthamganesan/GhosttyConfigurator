@@ -205,6 +205,7 @@ struct FontPane: View {
                     }
                     .buttonStyle(.borderless)
                     .help("Use the Regular family")
+                    .accessibilityLabel("Reset to Regular family")
                 }
             }
         } label: {

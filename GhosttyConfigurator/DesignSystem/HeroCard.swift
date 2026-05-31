@@ -23,6 +23,7 @@ struct HeroCard: View {
                             endPoint: .bottom
                         ))
                 )
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.title2).bold()
                 Text(description)

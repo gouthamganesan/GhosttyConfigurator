@@ -179,6 +179,7 @@ private struct EnvVarsEditor: View {
                         }
                         .buttonStyle(.borderless)
                         .help("Remove this variable")
+                        .accessibilityLabel("Remove variable")
                     }
                 }
                 HStack {

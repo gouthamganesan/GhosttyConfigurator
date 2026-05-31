@@ -166,6 +166,7 @@ struct AdvancedPane: View {
                         }
                         .buttonStyle(.borderless)
                         .help("Clear the shader path")
+                        .accessibilityLabel("Clear shader path")
                     }
                 }
             } label: {
@@ -362,6 +363,7 @@ struct AdvancedPane: View {
                 }
                 .buttonStyle(.borderless)
                 .help("Apply earlier (lower priority)")
+                .accessibilityLabel("Move profile up (apply earlier)")
 
                 Button {
                     store.moveProfile(profile, direction: .down)
@@ -370,6 +372,7 @@ struct AdvancedPane: View {
                 }
                 .buttonStyle(.borderless)
                 .help("Apply later (higher priority)")
+                .accessibilityLabel("Move profile down (apply later)")
 
                 Button {
                     if exists {
@@ -382,6 +385,7 @@ struct AdvancedPane: View {
                 }
                 .buttonStyle(.borderless)
                 .help("Open in editor")
+                .accessibilityLabel("Open profile in editor")
 
                 Button(role: .destructive) {
                     store.removeProfile(profile)
@@ -391,6 +395,7 @@ struct AdvancedPane: View {
                 }
                 .buttonStyle(.borderless)
                 .help("Remove from active config (file stays on disk)")
+                .accessibilityLabel("Remove profile from active config")
             }
         }
         .padding(.vertical, 4)

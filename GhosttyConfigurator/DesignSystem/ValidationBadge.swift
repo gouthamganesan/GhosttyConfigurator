@@ -17,6 +17,7 @@ struct ValidationBadge: View {
         }
         .buttonStyle(.plain)
         .help(issue.message)
+        .accessibilityLabel("\(titleText): \(issue.message)")
         .popover(isPresented: $showPopover, arrowEdge: .top) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {

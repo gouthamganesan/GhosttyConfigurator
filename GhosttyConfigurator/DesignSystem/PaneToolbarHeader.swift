@@ -23,6 +23,7 @@ struct PaneHeader: View {
                     RoundedRectangle(cornerRadius: 5, style: .continuous)
                         .fill(tint)
                 )
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(title)

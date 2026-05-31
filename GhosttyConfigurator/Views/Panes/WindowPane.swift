@@ -79,6 +79,7 @@ struct WindowPane: View {
                             }
                             .buttonStyle(.borderless)
                             .help("Use the system default title font")
+                            .accessibilityLabel("Reset to system default title font")
                         }
                     }
                 } label: {

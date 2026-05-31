@@ -15,5 +15,6 @@ struct SidebarIcon: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.white)
             )
+            .accessibilityHidden(true)
     }
 }

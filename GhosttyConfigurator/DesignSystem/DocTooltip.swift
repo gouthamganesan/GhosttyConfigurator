@@ -44,6 +44,7 @@ struct DocTooltip: View {
         }
         .buttonStyle(.plain)
         .help("View documentation for \(key)")
+        .accessibilityLabel("Documentation for \(key)")
         .popover(isPresented: $isShown, arrowEdge: .leading) {
             popoverContent
                 .padding(14)
