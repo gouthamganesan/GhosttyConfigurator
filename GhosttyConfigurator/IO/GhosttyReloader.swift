@@ -113,4 +113,37 @@ enum GhosttyReloader {
 
         Logger.app.info("clicked Check for Updates… in Ghostty menu")
     }
+
+    /// Terminate any running Ghostty instance and relaunch it. Used as the
+    /// fallback when `reload()` can't reach Ghostty (not running, keybind
+    /// rebound, osascript denied). A fresh launch always picks up the config
+    /// the configurator just wrote. Throws if Ghostty isn't installed.
+    @MainActor
+    static func restart() async throws {
+        guard let url = ConfigPaths.ghosttyAppURL() else {
+            throw ReloadError.ghosttyNotInstalled
+        }
+
+        let running = NSWorkspace.shared.runningApplications.filter { app in
+            app.bundleIdentifier == "com.mitchellh.ghostty"
+        }
+        for app in running {
+            app.terminate()
+        }
+
+        // Poll for graceful exit, up to ~3s. If it won't quit (e.g. unsaved
+        // prompt), fall through and relaunch anyway — `open` activates the
+        // existing instance harmlessly in that case.
+        var waited = 0
+        while isGhosttyRunning, waited < 30 {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            waited += 1
+        }
+        if isGhosttyRunning {
+            Logger.app.info("Ghostty didn't quit within timeout; relaunching anyway")
+        }
+
+        NSWorkspace.shared.open(url)
+        Logger.app.info("restarted Ghostty to apply config")
+    }
 }

@@ -6,7 +6,8 @@ import SwiftUI
 struct ReloadToolbarButton: View {
     @Environment(ConfigStore.self) private var store
     @State private var lastError: String?
-    @State private var showErrorAlert: Bool = false
+    @State private var showFailureSheet: Bool = false
+    @State private var isRestarting: Bool = false
 
     var body: some View {
         Button {
@@ -15,10 +16,10 @@ struct ReloadToolbarButton: View {
                     try await GhosttyReloader.reload()
                 } catch let error as GhosttyReloader.ReloadError {
                     lastError = error.description
-                    showErrorAlert = true
+                    showFailureSheet = true
                 } catch {
                     lastError = String(describing: error)
-                    showErrorAlert = true
+                    showFailureSheet = true
                 }
             }
         } label: {
@@ -26,15 +27,72 @@ struct ReloadToolbarButton: View {
         }
         .help(helpText)
         .disabled(!store.ghosttyInstalled)
-        .alert(
-            "Couldn't reload Ghostty",
-            isPresented: $showErrorAlert,
-            presenting: lastError
-        ) { _ in
-            Button("OK", role: .cancel) {}
-        } message: { error in
-            Text(error +
-                "\n\nThe configurator wrote your changes to the config file. To apply them, focus Ghostty and press ⌘⇧, manually.")
+        .sheet(isPresented: $showFailureSheet) {
+            failureSheet
+        }
+    }
+
+    private var failureSheet: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Couldn't reload Ghostty", systemImage: "exclamationmark.triangle")
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 8) {
+                if let lastError {
+                    Text(lastError)
+                        .foregroundStyle(.secondary)
+                }
+                Text("Your changes were written to the config file.")
+                if store.ghosttyInstalled {
+                    Text("Restart Ghostty to apply them, or focus Ghostty and press ⌘⇧, manually.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Once Ghostty is running, focus it and press ⌘⇧, to apply them.")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .fixedSize(horizontal: false, vertical: true)
+
+            HStack {
+                Spacer()
+                Button("Cancel", role: .cancel) {
+                    showFailureSheet = false
+                }
+                .keyboardShortcut(.cancelAction)
+
+                if store.ghosttyInstalled {
+                    Button {
+                        restart()
+                    } label: {
+                        if isRestarting {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Text("Restart Ghostty")
+                        }
+                    }
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(isRestarting)
+                }
+            }
+        }
+        .padding(20)
+        .frame(width: 360)
+    }
+
+    private func restart() {
+        isRestarting = true
+        Task {
+            do {
+                try await GhosttyReloader.restart()
+                isRestarting = false
+                showFailureSheet = false
+            } catch let error as GhosttyReloader.ReloadError {
+                lastError = error.description
+                isRestarting = false
+            } catch {
+                lastError = String(describing: error)
+                isRestarting = false
+            }
         }
     }
 

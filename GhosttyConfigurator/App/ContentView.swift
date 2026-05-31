@@ -13,7 +13,16 @@ struct ContentView: View {
 
     @Environment(\.undoManager) private var undoManager
     @State private var installBannerDismissed: Bool = false
+    @State private var schemaBannerDismissed: Bool = false
     @State private var searchText: String = ""
+
+    /// True when schema introspection failed *and* the bundled fallback is too
+    /// thin to be useful — the one case where we owe the user an explanation.
+    private var showSchemaBanner: Bool {
+        SchemaStore.shared.lastError != nil
+            && SchemaStore.shared.schema.entries.count < 50
+            && !schemaBannerDismissed
+    }
 
     var body: some View {
         NavigationSplitView(columnVisibility: .constant(.all)) {
@@ -23,10 +32,28 @@ struct ContentView: View {
                 if !store.ghosttyInstalled, !installBannerDismissed {
                     InstallBanner(isDismissed: $installBannerDismissed)
                 }
+                if showSchemaBanner {
+                    Banner(
+                        kind: .warning,
+                        title: "Couldn't read Ghostty's settings catalog",
+                        detail: "Showing built-in defaults. Some option descriptions may be missing.",
+                        onDismiss: { schemaBannerDismissed = true }
+                    )
+                }
                 NavigationStack {
                     pane(for: selection.wrappedValue)
                 }
             }
+            .overlay(alignment: .bottom) {
+                if let notice = store.externalEditNotice {
+                    Banner(kind: .info, title: notice)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .shadow(radius: 8, y: 2)
+                        .padding(12)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: store.externalEditNotice)
         }
         .navigationSplitViewStyle(.balanced)
         .searchable(

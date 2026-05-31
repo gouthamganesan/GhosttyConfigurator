@@ -176,6 +176,22 @@ final class ConfigStore {
     @ObservationIgnored private let debounce: Duration = .milliseconds(600)
     @ObservationIgnored weak var undoManager: UndoManager?
 
+    /// Transient, user-visible notice surfaced as a toast (see `ContentView`).
+    /// Set when an external edit forces a reload; auto-clears after a few seconds.
+    private(set) var externalEditNotice: String?
+    @ObservationIgnored private var noticeTask: Task<Void, Never>?
+
+    /// Show a transient toast message; replaces any prior one and self-clears.
+    private func showNotice(_ message: String) {
+        externalEditNotice = message
+        noticeTask?.cancel()
+        noticeTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(4))
+            guard !Task.isCancelled else { return }
+            self?.externalEditNotice = nil
+        }
+    }
+
     // MARK: - Init
 
     init(fileURL: URL = ConfigPaths.resolveExistingURL()) {
@@ -1378,10 +1394,21 @@ final class ConfigStore {
 
     private func handleExternalEdit() async {
         if await io.hasExternalChanges() {
+            // If a debounced write is still pending, the in-memory snapshot it
+            // holds would clobber the external edit when it lands. Cancel it so
+            // disk genuinely wins, and tell the user what happened.
+            let hadPendingEdit = persistTask != nil
+            if hadPendingEdit {
+                persistTask?.cancel()
+                persistTask = nil
+            }
             do {
                 let reloaded = try await io.read()
                 file = reloaded
                 Logger.store.info("reloaded after external edit")
+                if hadPendingEdit {
+                    showNotice("Reloaded from disk — an external edit replaced your unsaved changes.")
+                }
             } catch {
                 Logger.store.error("reload failed: \(String(describing: error), privacy: .public)")
             }
