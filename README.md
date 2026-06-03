@@ -1,12 +1,18 @@
 # Ghostty Configurator
 
+[![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-blue.svg)](https://developer.apple.com/macos/)
+[![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
+[![Status](https://img.shields.io/badge/status-actively%20maintained-brightgreen.svg)](https://github.com/gouthamganesan/GhosttyConfigurator/commits/main)
+[![Version](https://img.shields.io/badge/version-0.1.31-blue.svg)](Configs/Common.xcconfig)
+[![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
+
 A native macOS GUI for editing [Ghostty](https://ghostty.org)'s config file —
 built to be indistinguishable from System Settings, because on Sonoma+ that
 look *is* the SwiftUI default and fighting it only takes you further away.
 
 ![logo](assets/branding/logo-source.png)
 
-**Status:** actively developed (v0.1.31). Reads and writes a real Ghostty
+**Status:** actively maintained (v0.1.31). Reads and writes a real Ghostty
 config, introspects the live option schema from the installed `ghostty`
 binary, and ships a working theme browser, keybind editor, validation lint,
 and global search. Not yet a tagged release — see the roadmap below.
