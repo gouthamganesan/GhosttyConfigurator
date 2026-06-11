@@ -19,21 +19,88 @@ and global search. Not yet a tagged release — see the roadmap below.
 
 ## Why this exists
 
-Ghostty has hundreds of config keys and no GUI. A native macOS editor unlocks
-the things a text file can't:
+Press `cmd + ,` in most Mac apps and you get a settings window. Press it in
+Ghostty and it opens a plain text file in your editor. That's deliberate, not
+neglect: Ghostty is built around sensible defaults and a zero-configuration
+philosophy, and [the text file is currently the only way to configure
+it](https://ghostty.org/docs/config). The docs promise that "in the future, we
+plan to also support native GUIs for configuration in line with our native UI
+philosophy," and Mitchell Hashimoto has
+[said](https://terminaltrove.com/blog/terminal-trove-talks-with-mitchell-hashimoto-ghostty/)
+GUI-based configuration is one of the features "missing in the initial 1.0
+release but that we know are important." Great terminal core first, settings
+UI later. Fair call. But the gap is real today.
 
-- **Theme browser with live preview** — browse the ~300 bundled themes against
+### The problem
+
+Configuring Ghostty today means: open the config file, open the reference
+docs in a browser, hunt for the right key, learn its exact syntax, type it in
+by hand, save, reload, and hope. The failure mode is silent. Ghostty ignores
+anything it doesn't recognize: typo `font-familiy` and nothing complains, no
+error, no lint. Your setting just doesn't apply and the default quietly
+stays. You find out later, when something looks off, and troubleshoot
+backwards through the docs.
+
+The nuances stack up:
+
+- **Discovery is half the problem.** 188 options, ~80 keybind actions, ~460
+  bundled themes. You can't configure what you don't know exists.
+- **Some values have their own grammar.** `theme = light:X,dark:Y`, keybind
+  chords and sequences, `font-feature = -calt`. Each is a small language to
+  learn before you can use it.
+- **Config can span multiple files** via includes, with two valid config
+  locations and a merge order. "Which file did this value come from" is a
+  genuine question.
+- **Theme picking is blind.** Set `theme = name`, reload, look, repeat.
+  Nobody does that 460 times; everybody settles.
+
+### Prior art
+
+[ghostty.zerebos.com](https://ghostty.zerebos.com/) is a genuinely nice
+web-based configurator, and it was the first thing I tried. Two gaps kept it
+from solving the problem: it still assumes you speak the config (plenty of
+fields expect raw values and deep option knowledge), and the last mile stays
+manual: it generates config text you copy into your file yourself. The risky
+step, the one with no validation and silent failures, is exactly the step it
+leaves with you. It's a faster keyboard for experts. This app aims to be a
+translator for everyone else.
+
+### The answer
+
+A native macOS app that presents every setting in System-Settings-style
+panes, explains each field and each possible value with friendly labels
+(never raw flags or grammar in the UI; the verbatim Ghostty docs are one
+click away), and loads, modifies, and writes the config file directly. No
+generated text, no copy-paste step.
+
+What that unlocks beyond "a form that edits a file":
+
+- **Theme browser with live preview.** Browse the bundled themes against
   a real terminal preview instead of editing `theme = ?` blind.
-- **Keybind editor** — record hotkeys directly and browse Ghostty's chord /
+- **Keybind editor.** Record hotkeys directly and browse Ghostty's chord /
   sequence grammar instead of memorising it.
-- **Validation lint** — Ghostty silently ignores typos (`font-familiy = X`
-  keeps the default). The GUI flags unknown keys and bad values up front.
-- **Schema-aware, version-forward** — option metadata is introspected from
+- **Validation lint.** The exact failure mode Ghostty leaves silent (unknown
+  keys, bad values) gets flagged up front.
+- **Settings provenance.** Per-row popover showing which config file (and
+  line) a value actually came from, given the multi-file merge order.
+- **Schema-aware, version-forward.** Option metadata is introspected from
   your installed `ghostty` at runtime, so the UI tracks the binary rather than
   hard-coding a schema that churns minor-to-minor.
-- **Import from Alacritty** — drop in an Alacritty `.toml` theme and convert it.
-- **Live reload** — edits write through to the config and trigger Ghostty to
+- **Lossless round-trip.** A custom parser preserves your comments, blank
+  lines, ordering, and includes. The app is a companion to the text file,
+  never its replacement.
+- **Import from Alacritty.** Drop in an Alacritty `.toml` theme and convert it.
+- **Live reload.** Edits write through to the config and trigger Ghostty to
   reload (with a restart fallback), plus a file watcher to catch external edits.
+
+### Coverage note
+
+Quite a few areas are still under construction. The sections that 80% of
+users actually touch (appearance, fonts, keybinds, windows) came first; the
+long tail is being worked through. If you're an open source contributor, poke
+at it, find issues, and
+[raise them](https://github.com/gouthamganesan/GhosttyConfigurator/issues/new)
+so they get fixed.
 
 ## Quick start (≈ 30 seconds)
 
